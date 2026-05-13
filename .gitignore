@@ -1,4 +1,9 @@
 docs/site/
+# data should not be in the github repository
+data/raw/Images
+data/raw/Annotation
+
+
 
 # test cache
 manual_test/
