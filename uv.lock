@@ -616,6 +616,7 @@ name = "dogs-classification"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [
+    { name = "dvc" },
     { name = "dvc-gs" },
     { name = "fastapi" },
     { name = "gcloud" },
@@ -639,6 +640,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "dvc", specifier = ">=3.67.1" },
     { name = "dvc-gs", specifier = ">=3.0.2" },
     { name = "fastapi", specifier = "==0.115.6" },
     { name = "gcloud", specifier = ">=0.18.3" },

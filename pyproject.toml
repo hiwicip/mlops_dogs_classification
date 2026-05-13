@@ -18,6 +18,7 @@ classifiers = [
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "dvc>=3.67.1",
     "dvc-gs>=3.0.2",
     "fastapi==0.115.6",
     "gcloud>=0.18.3",
