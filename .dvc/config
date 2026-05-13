@@ -2,3 +2,4 @@
     remote = remote_storage
 ['remote "remote_storage"']
     url = gs://mlops_dog_data
+    version_aware = true
