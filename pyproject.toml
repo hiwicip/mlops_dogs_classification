@@ -56,5 +56,14 @@ explicit = true
 [tool.ruff]
 line-length = 120
 
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle (PEP8)
+    "F",   # pyflakes (undefined names, unused imports)
+    "I",   # isort (import ordering)
+    "B",   # flake8-bugbear (common bugs)
+    "UP",  # pyupgrade (modern Python syntax)
+]
+
 [tool.coverage.run]
 omit = ["tests/*"]
