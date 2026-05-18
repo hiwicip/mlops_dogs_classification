@@ -2,7 +2,9 @@ docs/site/
 # data should not be in the github repository
 data/raw/Images
 data/raw/Annotation
-
+data/processed/eval
+data/processed/test
+data/processed/train
 
 
 # test cache

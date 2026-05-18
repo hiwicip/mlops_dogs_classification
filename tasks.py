@@ -9,9 +9,11 @@ PYTHON_VERSION = "3.12"
 
 # Project commands
 @task
-def preprocess_data(ctx: Context) -> None:
+def preprocess_data(ctx: Context, data_path: str = "data/raw/Images", output_folder: str = "data/processed") -> None:
     """Preprocess data."""
-    ctx.run(f"uv run src/{PROJECT_NAME}/data.py data/raw data/processed", echo=True, pty=not WINDOWS)
+    cmd = f"uv run src/{PROJECT_NAME}/data.py --data-path {data_path} --output-folder {output_folder}"
+    ctx.run(cmd, echo=True, pty=not WINDOWS)
+
 
 
 @task
