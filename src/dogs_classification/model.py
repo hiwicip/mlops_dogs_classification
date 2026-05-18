@@ -1,16 +1,14 @@
-from torch import nn
-import torch
+from transformers import ViTForImageClassification
 
-class Model(nn.Module):
-    """Just a dummy model to show how to structure your code"""
-    def __init__(self):
-        super().__init__()
-        self.layer = nn.Linear(1, 1)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.layer(x)
+def main():
+    ViTForImageClassification.from_pretrained(
+        "google/vit-base-patch16-224", num_labels=120, ignore_mismatched_sizes=True
+    )
+
+
+# num_labels=120 due to 120 dog breeds
+
 
 if __name__ == "__main__":
-    model = Model()
-    x = torch.rand(1)
-    print(f"Output shape of model: {model(x).shape}")
+    main()
