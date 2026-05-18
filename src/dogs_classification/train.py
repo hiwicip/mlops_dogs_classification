@@ -21,14 +21,14 @@ def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 10):
     statistics = {"train_loss": [], "train_accuracy": []}
     for epoch in range(epochs):
         model.train()
-        for i, (img, target) in enumerate(train_dataloader):
-            # Move images and targets to the appropriate device
-            img, target = img.to(DEVICE), target.to(DEVICE)
+        for i, batch in enumerate(train_dataloader):
+            img = batch["pixel_values"].to(DEVICE)
+            target = batch["labels"].to(DEVICE)
 
             optimizer.zero_grad()  # Reset gradients
 
             # Forward pass: compute predictions and loss
-            y_pred = model(img)
+            y_pred = model(img).logits
             loss = loss_fn(y_pred, target)
 
             # Backward pass: compute gradients
