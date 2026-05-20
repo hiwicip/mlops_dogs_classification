@@ -7,11 +7,10 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 10):
-    train_dataset = DogDataset("data/processed/metadata.csv", "train")  # noqa: F841
+    train_dataset = DogDataset("data/processed/metadata.csv", "train")
     test_dataset = DogDataset("data/processed/metadata.csv", "test")  # noqa: F841
-    model = DogModel()  # noqa: F841
+    model = DogModel()
     model.to(DEVICE)
-    # add rest of your training code here. Remove noqa when model and dataset variables are used.
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size)
 
