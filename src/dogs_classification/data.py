@@ -80,7 +80,7 @@ def preprocess(data_path: Path = RAW_DIR, output_folder: Path = PROCESSED_DIR) -
 
     breed_dirs = sorted([d for d in data_path.iterdir() if d.is_dir()])
 
-    classes = [d.name.split("-")[-1] for d in breed_dirs]
+    classes = [d.name.split("-", 1)[1] for d in breed_dirs]
 
     class_to_idx = {cls_name: idx for idx, cls_name in enumerate(classes)}
 
@@ -94,7 +94,7 @@ def preprocess(data_path: Path = RAW_DIR, output_folder: Path = PROCESSED_DIR) -
     eval_counter = 0
 
     for breed_dir in breed_dirs:
-        breed_name = breed_dir.name.split("-")[-1]
+        breed_name = breed_dir.name.split("-", 1)[1]
         label = class_to_idx[breed_name]
 
         image_paths = list(breed_dir.glob("*.jpg"))
