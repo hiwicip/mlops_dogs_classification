@@ -1,6 +1,8 @@
 import json
+import shutil
 from pathlib import Path
 
+import kagglehub
 import pandas as pd
 import torch
 import typer
@@ -44,8 +46,27 @@ class DogDataset(Dataset):
         }
 
 
+def download_data() -> Path:
+    cached_path = Path(kagglehub.dataset_download("jessicali9530/stanford-dogs-dataset"))
+    source_dir = cached_path / "images" / "Images"
+
+    if not source_dir.exists():
+        raise FileNotFoundError(f"Images folder not found: {source_dir}")
+
+    RAW_DIR.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"Copying dataset to {RAW_DIR}...")
+    shutil.copytree(source_dir, RAW_DIR)
+
+    print(f"Dataset available at: {RAW_DIR}")
+
+    return RAW_DIR
+
+
 def preprocess(data_path: Path = RAW_DIR, output_folder: Path = PROCESSED_DIR) -> None:
     print("Preprocessing data...")
+
+    data_path = download_data()
 
     output_folder.mkdir(parents=True, exist_ok=True)
 
@@ -59,7 +80,7 @@ def preprocess(data_path: Path = RAW_DIR, output_folder: Path = PROCESSED_DIR) -
 
     breed_dirs = sorted([d for d in data_path.iterdir() if d.is_dir()])
 
-    classes = [d.name.split("-")[-1] for d in breed_dirs]
+    classes = [d.name.split("-", 1)[1] for d in breed_dirs]
 
     class_to_idx = {cls_name: idx for idx, cls_name in enumerate(classes)}
 
@@ -73,7 +94,7 @@ def preprocess(data_path: Path = RAW_DIR, output_folder: Path = PROCESSED_DIR) -
     eval_counter = 0
 
     for breed_dir in breed_dirs:
-        breed_name = breed_dir.name.split("-")[-1]
+        breed_name = breed_dir.name.split("-", 1)[1]
         label = class_to_idx[breed_name]
 
         image_paths = list(breed_dir.glob("*.jpg"))
