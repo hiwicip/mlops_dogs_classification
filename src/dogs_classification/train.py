@@ -1,17 +1,23 @@
+from typing import List, Optional
+from omegaconf import DictConfig
+from tqdm import tqdm
 import torch
-
+import hydra
 from dogs_classification.data import DogDataset
 from dogs_classification.model import DogModel
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 10):
+@hydra.main(version_base=None, config_path="../../conf", config_name="config.yaml")
+def train(cfg: DictConfig):
+    lr = cfg.training.lr
+    batch_size = cfg.training.batch_size
+    epochs = cfg.training.epochs
+    model = DogModel(model_name=cfg.model.name)
+    model.to(DEVICE)
     train_dataset = DogDataset("data/processed/metadata.csv", "train")
     test_dataset = DogDataset("data/processed/metadata.csv", "test")  # noqa: F841
-    model = DogModel()
-    model.to(DEVICE)
-
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size)
 
     loss_fn = torch.nn.CrossEntropyLoss()
@@ -20,7 +26,7 @@ def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 10):
     statistics = {"train_loss": [], "train_accuracy": []}
     for epoch in range(epochs):
         model.train()
-        for i, batch in enumerate(train_dataloader):
+        for i, batch in enumerate(tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{epochs}")):
             img = batch["pixel_values"].to(DEVICE)
             target = batch["labels"].to(DEVICE)
 
