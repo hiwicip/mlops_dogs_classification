@@ -1,0 +1,6 @@
+model:
+  name: google/vit-base-patch16-224
+training:
+  lr: 0.001
+  batch_size: 32
+  epochs: 10
