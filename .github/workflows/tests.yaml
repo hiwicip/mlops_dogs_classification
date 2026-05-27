@@ -11,7 +11,6 @@ jobs:
     strategy:
       matrix:
         operating-system: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        python-version: ["3.12", "3.11"]
 
     steps:
       - name: Checkout code
@@ -21,14 +20,13 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.14
 
       - name: Install dependencies
         run: |
           uv sync --locked --dev
           uv tree
 
-      - name: Run tests & coverage
+      - name: Run tests
         run: |
-          uv run coverage run -m pytest tests/
-          uv run coverage report -m
+          uv run pytest tests/
