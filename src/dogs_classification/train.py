@@ -1,10 +1,8 @@
-from dogs_classification.data import MyDataset
-from dogs_classification.model import Model
+from dogs_classification.data import DogDataset
 
 
 def train():
-    dataset = MyDataset("data/raw")  # noqa: F841
-    model = Model()  # noqa: F841
+    dataset = DogDataset("data/raw", split="train")  # noqa: F841
     # add rest of your training code here. Remove noqa when model and dataset variables are used.
 
 
