@@ -1,5 +1,5 @@
 [build-system]
-requires = ["uv_build>=0.9.22,<0.10.0"]
+requires = ["uv_build>=0.11.14,<0.12.0"]
 build-backend = "uv_build"
 
 [project]
@@ -20,21 +20,27 @@ requires-python = ">=3.12"
 dependencies = [
     "dvc>=3.67.1",
     "dvc-gs>=3.0.2",
-    "fastapi==0.115.6",
+    "fastapi==0.136.1",
     "gcloud>=0.18.3",
+    "kagglehub>=1.0.1",
+    "pandas>=3.0.3",
+    "pillow>=12.2.0",
+    "scikit-learn>=1.8.0",
     "torch==2.6.0",
+    "torchvision>=0.21.0",
+    "transformers>=5.8.1",
     "typer==0.15.1",
     "uvicorn==0.34.0",
 ]
 
 [dependency-groups]
 dev = [
-    "coverage==7.6.9",
+    "coverage==7.14.0",
     "invoke==2.2.0",
-    "pre-commit==4.1.0",
+    "pre-commit==4.6.0",
     "pytest==8.3.4",
     "ruff==0.1.3",
-    "mypy==1.19.1",
+    "mypy==2.1.0",
     "mkdocs-material==9.7.1",
     "mkdocstrings-python==2.0.1",
 ]
@@ -55,6 +61,15 @@ explicit = true
 
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle (PEP8)
+    "F",   # pyflakes (undefined names, unused imports)
+    "I",   # isort (import ordering)
+    "B",   # flake8-bugbear (common bugs)
+    "UP",  # pyupgrade (modern Python syntax)
+]
 
 [tool.coverage.run]
 omit = ["tests/*"]
