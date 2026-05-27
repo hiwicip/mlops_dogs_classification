@@ -3,7 +3,8 @@ docs/site/
 data/raw/Images
 data/raw/Annotation
 data/processed
-
+outputs
+models
 
 # test cache
 manual_test/
