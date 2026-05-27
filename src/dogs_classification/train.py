@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import List, Optional
+
+import hydra
+import torch
 from omegaconf import DictConfig
 from tqdm import tqdm
-import torch
-import hydra
+
 from dogs_classification.data import DogDataset
 from dogs_classification.model import DogModel
 
@@ -33,7 +34,7 @@ def train(cfg: DictConfig):
     for epoch in range(epochs):
         # MODEL TRAINING
         model.train()
-        for i, batch in enumerate(tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{epochs}")):
+        for _, batch in enumerate(tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{epochs}")):
             img = batch["pixel_values"].to(DEVICE)
             target = batch["labels"].to(DEVICE)
 
