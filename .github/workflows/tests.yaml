@@ -2,16 +2,15 @@ name: Unit Tests
 
 on:
   push:
-    branches: [main]
+    branches: [master, main]
   pull_request:
-    branches: [main]
+    branches: [master, main]
 jobs:
   test:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
         operating-system: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        python-version: ["3.12", "3.11"]
 
     steps:
       - name: Checkout code
@@ -21,14 +20,13 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.13
 
       - name: Install dependencies
         run: |
           uv sync --locked --dev
           uv tree
 
-      - name: Run tests & coverage
+      - name: Run tests
         run: |
-          uv run coverage run -m pytest tests/
-          uv run coverage report -m
+          uv run pytest tests/
