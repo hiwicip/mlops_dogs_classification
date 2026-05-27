@@ -15,7 +15,6 @@ def preprocess_data(ctx: Context, data_path: str = "data/raw/Images", output_fol
     ctx.run(cmd, echo=True, pty=not WINDOWS)
 
 
-
 @task
 def train(ctx: Context) -> None:
     """Train model."""
