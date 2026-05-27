@@ -18,8 +18,8 @@ def train(cfg: DictConfig):
     epochs = cfg.training.epochs
     model = DogModel(model_name=cfg.model.name)
     model.to(DEVICE)
-    train_dataset = DogDataset("data/processed/metadata.csv", "train")
-    test_dataset = DogDataset("data/processed/metadata.csv", "test")  # noqa: F841
+    train_dataset = DogDataset(Path("data/processed/metadata.csv"), "train")
+    test_dataset = DogDataset(Path("data/processed/metadata.csv"), "test")  # noqa: F841
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size, shuffle=True)
     test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size, shuffle=True)  # noqa: F841
 
@@ -29,7 +29,7 @@ def train(cfg: DictConfig):
     output_dir = Path("models")
     output_dir.mkdir(exist_ok=True)
 
-    statistics = {"train_loss": [], "train_accuracy": [], "val_loss": [], "val_accuracy": []}
+    statistics: dict[str, list[float]] = {"train_loss": [], "train_accuracy": [], "val_loss": [], "val_accuracy": []}
     best_val_loss = float("inf")
     for epoch in range(epochs):
         # MODEL TRAINING
