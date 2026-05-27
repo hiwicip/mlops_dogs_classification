@@ -5,5 +5,3 @@ training:
   lr: 0.000002
   batch_size: 64
   epochs: 20
-
-
