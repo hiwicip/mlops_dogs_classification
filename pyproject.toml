@@ -16,7 +16,7 @@ classifiers = [
   "Programming Language :: Python :: 3",
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
     "dvc>=3.67.1",
     "dvc-gs>=3.0.2",
@@ -28,7 +28,7 @@ dependencies = [
     "pandas>=3.0.3",
     "pillow>=12.2.0",
     "scikit-learn>=1.8.0",
-    "torch==2.6.0",
+    "torch>=2.6.0",
     "torchvision>=0.21.0",
     "tqdm>=4.67.3",
     "transformers>=5.8.1",
@@ -52,15 +52,15 @@ dev = [
 
 [tool.uv.sources]
 torch = [
-    { index = "pytorch-cpu" },
+    { index = "pytorch-cu128" },
 ]
 torchvision = [
-    { index = "pytorch-cpu" },
+    { index = "pytorch-cu128" },
 ]
 
 [[tool.uv.index]]
-name = "pytorch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [tool.ruff]

@@ -4,7 +4,7 @@ from invoke import Context, task
 
 WINDOWS = os.name == "nt"
 PROJECT_NAME = "dogs_classification"
-PYTHON_VERSION = "3.12"
+PYTHON_VERSION = "3.13"
 
 
 # Project commands
@@ -17,9 +17,9 @@ def preprocess_data(ctx: Context, data_path: str = "data/raw/Images", output_fol
 
 
 @task
-def train(ctx: Context) -> None:
+def train(ctx: Context, config_path: str = "../../configs", config_name: str = "config.yaml") -> None:
     """Train model."""
-    ctx.run(f"uv run src/{PROJECT_NAME}/train.py", echo=True, pty=not WINDOWS)
+    ctx.run(f"uv run src/{PROJECT_NAME}/train.py --config-path {config_path} --config-name {config_name}", echo=True, pty=not WINDOWS)
 
 
 @task
