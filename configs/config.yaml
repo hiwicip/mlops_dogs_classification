@@ -3,5 +3,5 @@ model:
 
 training:
   lr: 0.000001
-  batch_size: 64
+  batch_size: 4
   epochs: 50
