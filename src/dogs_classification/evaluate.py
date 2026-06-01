@@ -1,18 +1,19 @@
-import json
+from collections import defaultdict
 from pathlib import Path
 
 import hydra
+import numpy as np
 import torch
-from google.cloud import storage
 from omegaconf import DictConfig
 from sklearn.metrics import accuracy_score
+from tqdm import tqdm
 
 from dogs_classification.data import DogDataset
 from dogs_classification.model import DogModel
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-BUCKET_NAME = "mlops-dogs-data-eu"
+BUCKET_NAME = "mlops-dogs-data-euwest"
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="config.yaml")
@@ -33,7 +34,7 @@ def evaluate(cfg: DictConfig):
     all_labels = []
 
     with torch.no_grad():
-        for batch in eval_loader:
+        for batch in tqdm(eval_loader, desc="Evaluating"):
             img = batch["pixel_values"].to(DEVICE)
             labels = batch["labels"].to(DEVICE)
 
@@ -45,27 +46,41 @@ def evaluate(cfg: DictConfig):
 
     acc = accuracy_score(all_labels, all_preds)
 
-    result = {
-        "accuracy": float(acc),
-    }
+    correct_per_class = defaultdict(int)
+    total_per_class = defaultdict(int)
+
+    for pred, label in zip(all_preds, all_labels):
+        total_per_class[label] += 1
+        if pred == label:
+            correct_per_class[label] += 1
+
+    class_accuracy = {int(cls): correct_per_class[cls] / total_per_class[cls] for cls in total_per_class}
+
+    result = {"accuracy": float(acc), "class_accuracy": class_accuracy}
 
     print("Evaluated the thing")
     print(result)
 
-    # Save evaluation results as JSON
-    output_path = Path("logs/eval/performance.json")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_dir = Path("logs/eval")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, "w") as f:
-        json.dump(result, f, indent=2)
+    np.save(output_dir / "all_preds.npy", np.array(all_preds))
+    np.save(output_dir / "all_labels.npy", np.array(all_labels))
+
+    # Save evaluation results as JSON
+    # output_path = Path("logs/eval/performance.json")
+    # output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # with open(output_path, "w") as f:
+    #    json.dump(result, f, indent=2)
 
     # Upload results JSON file to GCS bucket
-    client = storage.Client(project="mlopsdogclassification")
-    bucket = client.bucket(BUCKET_NAME)
-    blob = bucket.blob("logs/eval/performance.json")
-    blob.upload_from_filename(output_path)
+    # client = storage.Client(project="mlopsdogclassification")
+    # bucket = client.bucket(BUCKET_NAME)
+    # blob = bucket.blob("logs/eval/performance.json")
+    # blob.upload_from_filename(output_path)
 
-    print("Uploaded results to Bucket.")
+    # print("Uploaded results to Bucket.")
 
 
 if __name__ == "__main__":
