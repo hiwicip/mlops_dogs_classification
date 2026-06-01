@@ -5,7 +5,7 @@ data/raw/Annotation
 data/processed
 outputs
 models
-
+wand
 # test cache
 manual_test/
 
