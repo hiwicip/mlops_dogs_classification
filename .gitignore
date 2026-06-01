@@ -5,8 +5,7 @@ data/raw/Annotation
 data/processed
 outputs
 models
-secrets
-
+wandb
 # test cache
 manual_test/
 
