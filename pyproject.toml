@@ -75,6 +75,9 @@ select = [
     "UP",  # pyupgrade (modern Python syntax)
 ]
 
+[tool.ruff.lint.isort]
+known-third-party = ["wandb"]
+
 [tool.coverage.run]
 omit = ["tests/*"]
 

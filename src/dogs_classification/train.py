@@ -3,10 +3,10 @@ from pathlib import Path
 import hydra
 import numpy as np
 import torch
+import wandb
 from omegaconf import DictConfig
 from tqdm import tqdm
 
-import wandb
 from dogs_classification.data import DogDataset
 from dogs_classification.model import DogModel
 from dogs_classification.visualize import log_visualizations

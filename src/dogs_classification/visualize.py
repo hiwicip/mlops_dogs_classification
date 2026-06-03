@@ -2,9 +2,8 @@ import json
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import confusion_matrix
-
 import wandb
+from sklearn.metrics import confusion_matrix
 
 
 def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict) -> None:
