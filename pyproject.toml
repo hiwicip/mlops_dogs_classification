@@ -41,7 +41,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "coverage==7.14.0",
-    "invoke==2.2.0",
+    "invoke==3.0.3",
     "pre-commit==4.6.0",
     "pytest==8.3.4",
     "ruff==0.1.3",
