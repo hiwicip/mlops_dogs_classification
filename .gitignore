@@ -6,7 +6,7 @@ data/processed
 wandb
 outputs
 models
-
+wandb
 # test cache
 manual_test/
 
