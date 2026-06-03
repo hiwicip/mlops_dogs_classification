@@ -16,10 +16,33 @@ def preprocess_data(ctx: Context, data_path: str = "data/raw/Images", output_fol
 
 
 @task
-def train(ctx: Context, config_path: str = "../../configs", config_name: str = "config.yaml") -> None:
+def train(
+    ctx: Context,
+    config_path: str = "../../configs",
+    config_name: str = "config.yaml",
+    epochs: int | None = None,
+    lr: float | None = None,
+    batch_size: int | None = None,
+) -> None:
     """Train model."""
+
+    overrides = []
+    if epochs is not None:
+        overrides.append(f"training.epochs={epochs}")
+    if lr is not None:
+        overrides.append(f"training.lr={lr}")
+    if batch_size is not None:
+        overrides.append(f"training.batch_size={batch_size}")
+
+    command = (
+        f"uv run src/{PROJECT_NAME}/train.py "
+        f"--config-path {config_path} "
+        f"--config-name {config_name} "
+        f"{' '.join(overrides)}"
+    )
+
     ctx.run(
-        f"uv run src/{PROJECT_NAME}/train.py --config-path {config_path} --config-name {config_name}",
+        command,
         echo=True,
         pty=not WINDOWS,
     )

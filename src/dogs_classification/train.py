@@ -19,9 +19,9 @@ def train(cfg: DictConfig):
     model = DogModel(model_name=cfg.model.name)
     model.to(DEVICE)
     train_dataset = DogDataset(Path("data/processed/metadata.csv"), "train")
-    test_dataset = DogDataset(Path("data/processed/metadata.csv"), "test")  # noqa: F841
+    test_dataset = DogDataset(Path("data/processed/metadata.csv"), "test")
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size, shuffle=True)
-    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size, shuffle=True)  # noqa: F841
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size, shuffle=True)
 
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
