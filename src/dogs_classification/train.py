@@ -92,19 +92,6 @@ def train(cfg: DictConfig):
         preds = torch.cat(preds_list, 0)
         targets = torch.cat(targets_list, 0)
 
-        for class_id in range(preds.shape[1]):
-            one_hot = torch.zeros_like(targets)
-            one_hot[targets == class_id] = 1
-            _ = RocCurveDisplay.from_predictions(
-                one_hot.cpu().numpy(),
-                preds[:, class_id].cpu().numpy(),
-                name=f"ROC curve for {label_to_breed.get(class_id, class_id)}",
-                plot_chance_level=(class_id == preds.shape[1] - 1),
-            )
-
-        wandb.log({"roc": wandb.Image(plt)})
-        plt.close()
-
         # MODEL EVALUATION
         model.eval()
         val_losses, val_accs = [], []
