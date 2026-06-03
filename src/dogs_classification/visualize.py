@@ -1,9 +1,12 @@
 import json
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import wandb
 from sklearn.metrics import confusion_matrix
+
+matplotlib.use("Agg")
 
 
 def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict) -> None:
