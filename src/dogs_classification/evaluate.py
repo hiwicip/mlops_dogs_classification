@@ -46,8 +46,8 @@ def evaluate(cfg: DictConfig):
 
     acc = accuracy_score(all_labels, all_preds)
 
-    correct_per_class = defaultdict(int)
-    total_per_class = defaultdict(int)
+    correct_per_class: dict[int, int] = defaultdict(int)
+    total_per_class: dict[int, int] = defaultdict(int)
 
     for pred, label in zip(all_preds, all_labels):
         total_per_class[label] += 1
