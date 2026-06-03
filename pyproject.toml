@@ -80,6 +80,7 @@ select = [
 known-third-party = ["wandb"]
 
 [tool.coverage.run]
+source = ["src"]
 omit = ["tests/*"]
 
 [tool.mypy]
