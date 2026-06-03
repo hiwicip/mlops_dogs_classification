@@ -42,6 +42,8 @@ def train(cfg: DictConfig):
 
     label_to_breed = dict(zip(train_dataset.df["label"], train_dataset.df["breed"]))
 
+    label_to_breed = dict(zip(train_dataset.df["label"], train_dataset.df["breed"]))
+
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
