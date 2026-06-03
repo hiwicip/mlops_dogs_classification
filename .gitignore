@@ -6,7 +6,6 @@ data/processed
 outputs
 models
 wandb
-
 # test cache
 manual_test/
 
