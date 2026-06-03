@@ -75,6 +75,7 @@ select = [
 ]
 
 [tool.coverage.run]
+source = ["src"]
 omit = ["tests/*"]
 
 [tool.mypy]
