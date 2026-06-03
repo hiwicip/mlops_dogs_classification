@@ -75,8 +75,15 @@ select = [
     "UP",  # pyupgrade (modern Python syntax)
 ]
 
+[tool.ruff.lint.isort]
+known-third-party = ["wandb"]
+
 [tool.coverage.run]
 omit = ["tests/*"]
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "wandb"
+follow_imports = "skip"
