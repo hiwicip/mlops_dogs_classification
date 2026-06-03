@@ -80,3 +80,7 @@ omit = ["tests/*"]
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "wandb"
+follow_imports = "skip"

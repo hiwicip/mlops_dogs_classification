@@ -1,14 +1,15 @@
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import hydra
+import numpy as np
 import torch
-import wandb
 from omegaconf import DictConfig
 from tqdm import tqdm
 
+import wandb
 from dogs_classification.data import DogDataset
 from dogs_classification.model import DogModel
+from dogs_classification.visualize import log_visualizations
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -31,7 +32,7 @@ def train(cfg: DictConfig):
             "batch_size": batch_size,
             "epochs": epochs,
             "model_name": cfg.model.name,
-        }
+        },
     )
 
     train_dataset = DogDataset(Path("data/processed/metadata.csv"), "train")
@@ -88,12 +89,10 @@ def train(cfg: DictConfig):
                     ]
                     wandb.log({"images": images})
 
-        preds = torch.cat(preds_list, 0)
-        targets = torch.cat(targets_list, 0)
-
         # MODEL EVALUATION
         model.eval()
         val_losses, val_accs = [], []
+        val_preds_list, val_targets_list = [], []
         with torch.no_grad():
             with tqdm(test_dataloader, desc="Validation") as val_pbar:
                 for val_batch in val_pbar:
@@ -101,11 +100,15 @@ def train(cfg: DictConfig):
                     y_pred = model(img).logits
                     val_losses.append(loss_fn(y_pred, target).item())
                     val_accs.append((y_pred.argmax(dim=1) == target).float().mean().item())
+                    val_preds_list.extend(y_pred.argmax(dim=1).cpu().numpy())
+                    val_targets_list.extend(target.cpu().numpy())
                     val_pbar.set_postfix(val_loss=f"{sum(val_losses) / len(val_losses):.4f}")
 
         val_loss = sum(val_losses) / len(val_losses)
         val_acc = sum(val_accs) / len(val_accs)
 
+        idx_to_class = label_to_breed
+        log_visualizations(np.array(val_preds_list), np.array(val_targets_list), idx_to_class)
         wandb.log({"val_loss": val_loss, "val_accuracy": val_acc})
         statistics["val_loss"].append(val_loss)
         statistics["val_accuracy"].append(val_acc)
