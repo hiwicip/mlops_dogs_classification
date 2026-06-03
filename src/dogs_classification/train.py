@@ -36,9 +36,11 @@ def train(cfg: DictConfig):
     )
 
     train_dataset = DogDataset(Path("data/processed/metadata.csv"), "train")
-    test_dataset = DogDataset(Path("data/processed/metadata.csv"), "test")  # noqa: F841
+    test_dataset = DogDataset(Path("data/processed/metadata.csv"), "test")
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size, shuffle=True)
-    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size, shuffle=True)  # noqa: F841
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size, shuffle=True)
+
+    label_to_breed = dict(zip(train_dataset.df["label"], train_dataset.df["breed"]))
 
     label_to_breed = dict(zip(train_dataset.df["label"], train_dataset.df["breed"]))
 
