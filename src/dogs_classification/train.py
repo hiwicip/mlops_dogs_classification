@@ -4,6 +4,7 @@ import hydra
 import numpy as np
 import torch
 import wandb
+from google.cloud import storage
 from omegaconf import DictConfig
 from tqdm import tqdm
 
@@ -12,6 +13,7 @@ from dogs_classification.model import DogModel
 from dogs_classification.visualize import log_visualizations
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+BUCKET_NAME = "mlops-dogs-data-euwest4"
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="config.yaml")
@@ -120,6 +122,15 @@ def train(cfg: DictConfig):
             best_val_loss = val_loss
             torch.save(model.state_dict(), output_dir / "best_model.pt")
             tqdm.write(f"Saved best model (val_loss={val_loss:.4f})")
+
+    # Upload results .pt file to GCS bucket
+
+    client = storage.Client(project="mlopsdogclassification")
+    bucket = client.bucket(BUCKET_NAME)
+    blob = bucket.blob("models/best_model.pt")
+    blob.upload_from_filename(output_dir / "best_model.pt")
+
+    print("Uploaded results to Bucket.")
 
 
 if __name__ == "__main__":

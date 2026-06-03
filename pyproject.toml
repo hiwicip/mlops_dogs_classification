@@ -36,6 +36,7 @@ dependencies = [
     "typing>=3.10.0.0",
     "uvicorn==0.34.0",
     "matplotlib>=3.10.9",
+    "wandb>=0.27.0",
 ]
 
 [dependency-groups]
