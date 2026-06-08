@@ -56,16 +56,27 @@ def test(ctx: Context) -> None:
 
 
 @task
-def docker_build(ctx: Context, progress: str = "plain") -> None:
-    """Build docker images."""
-    ctx.run(
-        f"docker build -t train:latest . -f dockerfiles/train.dockerfile --progress={progress}",
-        echo=True,
-        pty=not WINDOWS,
+def docker_build(
+    ctx: Context,
+    dockerfile: str = "dockerfiles/train.dockerfile",
+    progress: str = "plain",
+    platform: str = "linux/amd64",
+    image_name: str = "gcr.io/mlopsdogclassification/dogs-train:latest",
+    device: str = "cpu",
+    push: bool = False,
+) -> None:
+    """Build docker image."""
+    command = (
+        f"docker build"
+        f" --platform {platform}"
+        f" -t {image_name}"
+        f" --build-arg DEVICE={device}"
+        f" . -f {dockerfile}"
+        f" --progress={progress}"
     )
-    ctx.run(
-        f"docker build -t api:latest . -f dockerfiles/api.dockerfile --progress={progress}", echo=True, pty=not WINDOWS
-    )
+    if push:
+        command += " --push"
+    ctx.run(command, echo=True, pty=not WINDOWS)
 
 
 # Documentation commands
