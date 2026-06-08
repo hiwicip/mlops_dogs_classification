@@ -1,4 +1,9 @@
-FROM ghcr.io/astral-sh/uv:python3.12-alpine AS base
+ARG DEVICE=cpu
+
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS base
+
+ARG DEVICE
+ENV UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/${DEVICE}
 
 COPY uv.lock uv.lock
 COPY pyproject.toml pyproject.toml
