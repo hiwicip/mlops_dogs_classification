@@ -68,6 +68,12 @@ def docker_build(ctx: Context, progress: str = "plain") -> None:
     )
 
 
+@task
+def docker_run(ctx: Context) -> None:
+    """Run docker containers."""
+    ctx.run("docker run -rm train train:gpu", echo=True, pty=not WINDOWS)
+
+
 # Documentation commands
 @task
 def build_docs(ctx: Context) -> None:
