@@ -1,3 +1,4 @@
+import contextlib
 from pathlib import Path
 
 import hydra
@@ -6,6 +7,7 @@ import torch
 import wandb
 from google.cloud import storage
 from omegaconf import DictConfig
+from torch.profiler import ProfilerActivity, profile, schedule, tensorboard_trace_handler
 from tqdm import tqdm
 
 from dogs_classification.data import DogDataset
@@ -54,44 +56,56 @@ def train(cfg: DictConfig):
 
     statistics: dict[str, list[float]] = {"train_loss": [], "train_accuracy": [], "val_loss": [], "val_accuracy": []}
     best_val_loss = float("inf")
-    for epoch in range(epochs):
-        # MODEL TRAINING
-        model.train()
-        preds_list: list[torch.Tensor] = []
-        targets_list: list[torch.Tensor] = []
-        with tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{epochs}") as train_pbar:
-            for i, batch in enumerate(train_pbar):
-                img, target = batch["pixel_values"].to(DEVICE), batch["labels"].to(DEVICE)
 
-                optimizer.zero_grad()
-                y_pred = model(img).logits
-                loss = loss_fn(y_pred, target)
-                loss.backward()
-                optimizer.step()
+    with profile(
+        activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+        schedule=schedule(wait=1, warmup=1, active=3, repeat=1),
+        on_trace_ready=tensorboard_trace_handler("./logs/profiler"),
+        profile_memory=True,
+        record_shapes=True,
+        with_stack=True,
+    ) if cfg.training.profile else contextlib.nullcontext() as prof:
+        for epoch in range(epochs):
+            # MODEL TRAINING
+            model.train()
+            preds_list: list[torch.Tensor] = []
+            targets_list: list[torch.Tensor] = []
+            with tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{epochs}") as train_pbar:
+                for i, batch in enumerate(train_pbar):
+                    img, target = batch["pixel_values"].to(DEVICE), batch["labels"].to(DEVICE)
 
-                accuracy = (y_pred.argmax(dim=1) == target).float().mean()
+                    optimizer.zero_grad()
+                    y_pred = model(img).logits
+                    loss = loss_fn(y_pred, target)
+                    loss.backward()
+                    optimizer.step()
 
-                wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item()})
+                    accuracy = (y_pred.argmax(dim=1) == target).float().mean()
 
-                statistics["train_loss"].append(loss.item())
-                statistics["train_accuracy"].append(accuracy.item())
+                    if cfg.training.profile and prof is not None:
+                        prof.step()
 
-                preds_list.append(y_pred.detach().softmax(dim=1))
-                targets_list.append(target)
+                    wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item()})
 
-                train_pbar.set_postfix(train_loss=f"{loss.item():.4f}")
+                    statistics["train_loss"].append(loss.item())
+                    statistics["train_accuracy"].append(accuracy.item())
 
-                if i % 100 == 0:
-                    pred_labels = y_pred.argmax(dim=1)
-                    true_breeds = batch["breed"]
-                    images = [
-                        wandb.Image(
-                            img[j].detach().cpu(),
-                            caption=f"true: {true_breeds[j]} | pred: {label_to_breed[pred_labels[j].item()]}",
-                        )
-                        for j in range(min(3, img.shape[0]))
-                    ]
-                    wandb.log({"images": images})
+                    preds_list.append(y_pred.detach().softmax(dim=1))
+                    targets_list.append(target)
+
+                    train_pbar.set_postfix(train_loss=f"{loss.item():.4f}")
+
+                    if i % 100 == 0:
+                        pred_labels = y_pred.argmax(dim=1)
+                        true_breeds = batch["breed"]
+                        images = [
+                            wandb.Image(
+                                img[j].detach().cpu(),
+                                caption=f"true: {true_breeds[j]} | pred: {label_to_breed[pred_labels[j].item()]}",
+                            )
+                            for j in range(min(3, img.shape[0]))
+                        ]
+                        wandb.log({"images": images})
 
         # MODEL EVALUATION
         model.eval()
