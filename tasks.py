@@ -61,15 +61,18 @@ def docker_build(
     dockerfile: str = "dockerfiles/train.dockerfile",
     progress: str = "plain",
     platform: str = "linux/amd64",
-    image_name: str = "gcr.io/mlopsdogclassification/dogs-train:latest",
+    image_name: str = "",
     device: str = "cpu",
     push: bool = False,
 ) -> None:
     """Build docker image."""
+    tag = (
+        image_name or f"europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-train:{device}"
+    )
     command = (
         f"docker build"
         f" --platform {platform}"
-        f" -t {image_name}"
+        f" -t {tag}"
         f" --build-arg DEVICE={device}"
         f" . -f {dockerfile}"
         f" --progress={progress}"
