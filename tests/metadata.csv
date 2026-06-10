@@ -1,0 +1,4 @@
+﻿image_path;label;breed;split
+data/processed/train/image_0.pt;0;Chihuahua;train
+data/processed/test/image_0.pt;0;Chihuahua;test
+data/processed/eval/image_0.pt;0;Chihuahua;eval
