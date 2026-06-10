@@ -1,0 +1,9 @@
+data/raw/
+data/processed/
+.dvc/cache
+models/
+outputs/
+secrets/
+.venv/
+__pycache__/
+*.pyc

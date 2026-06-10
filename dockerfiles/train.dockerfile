@@ -1,6 +1,6 @@
 ARG DEVICE=cpu
 
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS base
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS base
 
 ARG DEVICE
 ENV UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/${DEVICE}
@@ -11,9 +11,13 @@ COPY pyproject.toml pyproject.toml
 RUN uv sync --frozen --no-install-project
 
 COPY src src/
+COPY configs configs/
+COPY .dvc .dvc/
+COPY .git .git
+COPY data/processed.dvc data/processed.dvc
 COPY README.md README.md
 COPY LICENSE LICENSE
 
 RUN uv sync --frozen
 
-ENTRYPOINT ["uv", "run", "src/dogs_classification/train.py"]
+ENTRYPOINT ["sh", "-c", "uv run dvc pull && uv run src/dogs_classification/train.py"]
