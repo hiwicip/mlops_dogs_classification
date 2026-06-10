@@ -66,7 +66,9 @@ def docker_build(
     push: bool = False,
 ) -> None:
     """Build docker image."""
-    tag = image_name or f"gcr.io/mlopsdogclassification/dogs-train:{device}"
+    tag = (
+        image_name or f"europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-train:{device}"
+    )
     command = (
         f"docker build"
         f" --platform {platform}"
