@@ -4,5 +4,5 @@ model:
 training:
   lr: 0.000001
   batch_size: 64
-  epochs: 50
+  epochs: 20
   profile: True
