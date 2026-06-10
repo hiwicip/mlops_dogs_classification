@@ -66,46 +66,46 @@ def train(cfg: DictConfig):
         with_stack=True,
     ) if cfg.training.profile else contextlib.nullcontext() as prof:
         for epoch in range(epochs):
-        # MODEL TRAINING
-        model.train()
-        preds_list: list[torch.Tensor] = []
-        targets_list: list[torch.Tensor] = []
-        with tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{epochs}") as train_pbar:
-            for i, batch in enumerate(train_pbar):
-                img, target = batch["pixel_values"].to(DEVICE), batch["labels"].to(DEVICE)
+            # MODEL TRAINING
+            model.train()
+            preds_list: list[torch.Tensor] = []
+            targets_list: list[torch.Tensor] = []
+            with tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{epochs}") as train_pbar:
+                for i, batch in enumerate(train_pbar):
+                    img, target = batch["pixel_values"].to(DEVICE), batch["labels"].to(DEVICE)
 
-                optimizer.zero_grad()
-                y_pred = model(img).logits
-                loss = loss_fn(y_pred, target)
-                loss.backward()
-                optimizer.step()
+                    optimizer.zero_grad()
+                    y_pred = model(img).logits
+                    loss = loss_fn(y_pred, target)
+                    loss.backward()
+                    optimizer.step()
 
-                accuracy = (y_pred.argmax(dim=1) == target).float().mean()
-                
-                if cfg.training.profile and prof is not None:
-                    prof.step()
+                    accuracy = (y_pred.argmax(dim=1) == target).float().mean()
 
-                wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item()})
+                    if cfg.training.profile and prof is not None:
+                        prof.step()
 
-                statistics["train_loss"].append(loss.item())
-                statistics["train_accuracy"].append(accuracy.item())
+                    wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item()})
 
-                preds_list.append(y_pred.detach().softmax(dim=1))
-                targets_list.append(target)
+                    statistics["train_loss"].append(loss.item())
+                    statistics["train_accuracy"].append(accuracy.item())
 
-                train_pbar.set_postfix(train_loss=f"{loss.item():.4f}")
+                    preds_list.append(y_pred.detach().softmax(dim=1))
+                    targets_list.append(target)
 
-                if i % 100 == 0:
-                    pred_labels = y_pred.argmax(dim=1)
-                    true_breeds = batch["breed"]
-                    images = [
-                        wandb.Image(
-                            img[j].detach().cpu(),
-                            caption=f"true: {true_breeds[j]} | pred: {label_to_breed[pred_labels[j].item()]}",
-                        )
-                        for j in range(min(3, img.shape[0]))
-                    ]
-                    wandb.log({"images": images})
+                    train_pbar.set_postfix(train_loss=f"{loss.item():.4f}")
+
+                    if i % 100 == 0:
+                        pred_labels = y_pred.argmax(dim=1)
+                        true_breeds = batch["breed"]
+                        images = [
+                            wandb.Image(
+                                img[j].detach().cpu(),
+                                caption=f"true: {true_breeds[j]} | pred: {label_to_breed[pred_labels[j].item()]}",
+                            )
+                            for j in range(min(3, img.shape[0]))
+                        ]
+                        wandb.log({"images": images})
 
         # MODEL EVALUATION
         model.eval()
@@ -136,7 +136,6 @@ def train(cfg: DictConfig):
             best_val_loss = val_loss
             torch.save(model.state_dict(), output_dir / "best_model.pt")
             tqdm.write(f"Saved best model (val_loss={val_loss:.4f})")
-
 
     # Upload results .pt file to GCS bucket
 
