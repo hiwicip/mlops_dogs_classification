@@ -37,11 +37,10 @@ jobs:
         run: |
           uv run python -m dogs_classification.dataset_statistics > report.md
 
-      - name: Setup CML
-        uses: iterative/setup-cml@v2
-
-      - name: Post CML report
+      - name: Post report as commit comment
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cml comment create report.md
+          gh api repos/${{ github.repository }}/commits/${{ github.sha }}/comments \
+            --method POST \
+            --field body="$(cat report.md)"
