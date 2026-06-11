@@ -21,14 +21,14 @@ def dataset_statistics(dataset_path: str = "data/processed/metadata.csv") -> Non
     train_label_distribution = torch.bincount(torch.tensor(train_dataset.df["label"].values))
     test_label_distribution = torch.bincount(torch.tensor(test_dataset.df["label"].values))
 
-    plt.bar(torch.arange(10), train_label_distribution)
+    plt.bar(torch.arange(len(train_label_distribution)), train_label_distribution)
     plt.title("Train label distribution")
     plt.xlabel("Label")
     plt.ylabel("Count")
     plt.savefig("train_label_distribution.png")
     plt.close()
 
-    plt.bar(torch.arange(10), test_label_distribution)
+    plt.bar(torch.arange(len(test_label_distribution)), test_label_distribution)
     plt.title("Test label distribution")
     plt.xlabel("Label")
     plt.ylabel("Count")
