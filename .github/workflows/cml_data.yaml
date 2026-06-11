@@ -1,0 +1,65 @@
+name: DVC Workflow
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+    - '**/*.dvc'
+    - '.dvc/**'
+
+jobs:
+  run_data_checker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h  # check remaining space
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv sync --locked --dev
+
+      - name: Auth with GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Pull data
+        run: |
+          uv run dvc pull --no-run-cache
+
+      - name: Check data statistics
+        run: |
+          uv run python -m dogs_classification.dataset_statistics > report.md
+
+      - name: Upload plots as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: label-distribution-plots
+          path: |
+            train_label_distribution.png
+            test_label_distribution.png
+            eval_label_distribution.png
+
+      - name: Post report as PR comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "" >> report.md
+          echo "**Label distribution plots** are available in the [workflow artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})." >> report.md
+          gh pr comment ${{ github.event.pull_request.number }} --body-file report.md

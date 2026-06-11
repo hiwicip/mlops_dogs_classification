@@ -2,6 +2,9 @@ outs:
 - hash: md5
   path: processed
   files:
+  - relpath: .DS_Store
+    md5: 47604e500cb6b84d2d81d68349a0a0a0
+    size: 8196
   - relpath: classes.json
     md5: 5b39dafe2faca117bd81047922128e10
     size: 1821
@@ -5426,54 +5429,12 @@ outs:
   - relpath: test/image_1391.pt
     md5: 77e48e809092da4f4f0ec065b2d5b3d3
     size: 603710
-  - relpath: test/image_1392.pt
-    md5: f89c1d240fbc63d241e3cb5bf6ec2a08
-    size: 603710
-  - relpath: test/image_1393.pt
-    md5: 0b103d6fd9f6e1c6b4ac116162e5decd
-    size: 603710
-  - relpath: test/image_1394.pt
-    md5: c16336cd1703accf05e621ff915dbdb7
-    size: 603710
-  - relpath: test/image_1395.pt
-    md5: 66d4a69aacc4a63f4589a8982e663380
-    size: 603710
-  - relpath: test/image_1396.pt
-    md5: 9242e1e72ae42ca92d9048fe4030913a
-    size: 603710
-  - relpath: test/image_1397.pt
-    md5: 3bfad6bc6aedf7c4cec952343b6e0f47
-    size: 603710
-  - relpath: test/image_1398.pt
-    md5: 85203883a29ae7a17eef29fd156c0731
-    size: 603710
-  - relpath: test/image_1399.pt
-    md5: 4ad2b99124e45cf5a84056bc957ced25
-    size: 603710
   - relpath: test/image_14.pt
     md5: 5fa39500a85cb2b2553c37550f0386f0
     size: 603696
   - relpath: test/image_140.pt
     md5: 3ff72c0c685c10f05a98adb4baf48871
     size: 603703
-  - relpath: test/image_1400.pt
-    md5: 5d5ab59659dc8f86f57ba3d659380452
-    size: 603710
-  - relpath: test/image_1401.pt
-    md5: d4983a9e8da1083ca533928fcce1c9c6
-    size: 603710
-  - relpath: test/image_1402.pt
-    md5: 5d2d95b5717e4a6d3eef0f557e10c588
-    size: 603710
-  - relpath: test/image_1403.pt
-    md5: 1e8f604842046e9ad401d034731b089e
-    size: 603710
-  - relpath: test/image_1404.pt
-    md5: 3be6a65082b24d9a6ca55e531964d621
-    size: 603710
-  - relpath: test/image_1405.pt
-    md5: 512c8c1296cf88311b637d3a4116557c
-    size: 603710
   - relpath: test/image_141.pt
     md5: 17dc1920065899eacf5a7be35ce816ac
     size: 603703
@@ -11467,9 +11428,6 @@ outs:
     size: 603717
   - relpath: train/image_10938.pt
     md5: 81c82670161f0a94f73749529be103e5
-    size: 603717
-  - relpath: train/image_10939.pt
-    md5: 1a3ddbb5f470231a9ecc5c36906cbcf2
     size: 603717
   - relpath: train/image_1094.pt
     md5: 50ceab6398cfa4ad419ca51f66e80fc5
