@@ -1,7 +1,7 @@
 name: DVC Workflow
 
 on:
-  pull_request:
+  push:
     branches: [67-add-continuous-workflow-that-triggers-when-data-changes]
     paths:
     - '**/*.dvc'

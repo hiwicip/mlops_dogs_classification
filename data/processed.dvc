@@ -3,8 +3,8 @@ outs:
   path: processed
   files:
   - relpath: .DS_Store
-    md5: 49d7e706b8dfce6a6799f68785356c3f
-    size: 6148
+    md5: 47604e500cb6b84d2d81d68349a0a0a0
+    size: 8196
   - relpath: classes.json
     md5: 5b39dafe2faca117bd81047922128e10
     size: 1821
@@ -11470,9 +11470,6 @@ outs:
     size: 603717
   - relpath: train/image_10938.pt
     md5: 81c82670161f0a94f73749529be103e5
-    size: 603717
-  - relpath: train/image_10939.pt
-    md5: 1a3ddbb5f470231a9ecc5c36906cbcf2
     size: 603717
   - relpath: train/image_1094.pt
     md5: 50ceab6398cfa4ad419ca51f66e80fc5
