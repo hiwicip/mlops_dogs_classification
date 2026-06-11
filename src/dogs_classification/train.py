@@ -11,7 +11,7 @@ from torch.profiler import ProfilerActivity, schedule
 
 from dogs_classification.model import DogModel
 
-BUCKET_NAME = "mlops-dogs-data-euwest4"
+BUCKET_NAME = "mlops-dog-data-euwest4"
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="config.yaml")
@@ -40,8 +40,8 @@ def train(cfg: DictConfig):
             activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
             schedule=schedule(wait=1, warmup=1, active=3, repeat=1),
             profile_memory=True,
-            record_shapes=True,
-            with_stack=True,
+            # record_shapes=True,
+            # with_stack=True,
         )
         if cfg.training.profile
         else None
