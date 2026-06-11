@@ -31,8 +31,8 @@ jobs:
 
       - name: Pull data
         run: |
-          dvc pull --no-run-cache
+          uv run dvc pull --no-run-cache
 
       - name: Check data statistics
         run: |
-          python dataset_statistics.py
+          uv run python -m dogs_classification.dataset_statistics

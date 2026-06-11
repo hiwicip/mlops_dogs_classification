@@ -5468,9 +5468,6 @@ outs:
   - relpath: test/image_1402.pt
     md5: 5d2d95b5717e4a6d3eef0f557e10c588
     size: 603710
-  - relpath: test/image_1403.pt
-    md5: 1e8f604842046e9ad401d034731b089e
-    size: 603710
   - relpath: test/image_141.pt
     md5: 17dc1920065899eacf5a7be35ce816ac
     size: 603703
