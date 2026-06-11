@@ -10,6 +10,8 @@ on:
 jobs:
   run_data_checker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
