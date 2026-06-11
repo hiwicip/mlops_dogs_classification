@@ -136,11 +136,11 @@ class DogModel(LightningModule):
         return torch.utils.data.DataLoader(train_dataset, self.batch_size, shuffle=True)
 
     def val_dataloader(self):
-        val_dataset = DogDataset(Path("data/processed/metadata.csv"), "eval")
+        val_dataset = DogDataset(Path("data/processed/metadata.csv"), "test")
         return torch.utils.data.DataLoader(val_dataset, self.batch_size, shuffle=False)
 
     def test_dataloader(self):
-        test_dataset = DogDataset(Path("data/processed/metadata.csv"), "test")
+        test_dataset = DogDataset(Path("data/processed/metadata.csv"), "eval")
         return torch.utils.data.DataLoader(test_dataset, self.batch_size, shuffle=False)
 
 
