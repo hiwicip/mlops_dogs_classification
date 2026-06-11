@@ -37,7 +37,11 @@ jobs:
         run: |
           uv run python -m dogs_classification.dataset_statistics > report.md
 
+      - name: Setup CML
+        uses: iterative/setup-cml@v2
+
       - name: Post CML report
-        uses: iterative/cml@v3
-        with:
-          command: comment create report.md
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cml comment create report.md
