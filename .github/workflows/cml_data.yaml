@@ -35,4 +35,9 @@ jobs:
 
       - name: Check data statistics
         run: |
-          uv run python -m dogs_classification.dataset_statistics
+          uv run python -m dogs_classification.dataset_statistics > report.md
+
+      - name: Post CML report
+        uses: iterative/cml@v2
+        with:
+          command: comment create report.md
