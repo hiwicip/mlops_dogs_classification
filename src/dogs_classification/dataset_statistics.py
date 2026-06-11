@@ -3,7 +3,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import torch
 import typer
-from utils import show_image_and_target
 
 from dogs_classification.data import DogDataset
 
@@ -18,10 +17,6 @@ def dataset_statistics(dataset_path: str = "data/processed/metadata.csv") -> Non
     print("Test dataset:")
     print(f"Number of images: {len(test_dataset)}")
     print(f"Image shape: {test_dataset[0]['pixel_values'].shape}")
-
-    show_image_and_target(train_dataset.images[:5], train_dataset.target[:5])
-    plt.savefig("dog_images.png")
-    plt.close()
 
     train_label_distribution = torch.bincount(torch.tensor(train_dataset.df["label"].values))
     test_label_distribution = torch.bincount(torch.tensor(test_dataset.df["label"].values))
