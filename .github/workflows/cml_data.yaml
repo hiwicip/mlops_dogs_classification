@@ -1,0 +1,40 @@
+name: DVC Workflow
+
+on:
+  pull_request:
+    branches: [67-add-continuous-workflow-that-triggers-when-data-changes]
+    paths:
+    - '**/*.dvc'
+    - '.dvc/**'
+
+jobs:
+  run_data_checker:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.11
+        cache: 'pip'
+        cache-dependency-path: setup.py
+
+    - name: Install dependencies
+      run: |
+        make dev_requirements
+        pip list
+
+    - name: Auth with GCP
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Pull data
+      run: |
+        dvc pull --no-run-cache
+
+    - name: Check data statistics
+      run: |
+        python dataset_statistics.py
