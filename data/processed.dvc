@@ -2,6 +2,9 @@ outs:
 - hash: md5
   path: processed
   files:
+  - relpath: .DS_Store
+    md5: 49d7e706b8dfce6a6799f68785356c3f
+    size: 6148
   - relpath: classes.json
     md5: 5b39dafe2faca117bd81047922128e10
     size: 1821
