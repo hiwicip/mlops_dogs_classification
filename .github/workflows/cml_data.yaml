@@ -38,6 +38,6 @@ jobs:
           uv run python -m dogs_classification.dataset_statistics > report.md
 
       - name: Post CML report
-        uses: iterative/cml@v2
+        uses: iterative/cml@v3
         with:
           command: comment create report.md
