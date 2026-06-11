@@ -1,5 +1,6 @@
 import hydra
 import torch
+import wandb
 from google.cloud import storage
 from omegaconf import DictConfig
 from pytorch_lightning import Trainer
@@ -23,6 +24,8 @@ def train(cfg: DictConfig):
 
     wandb_logger = WandbLogger(
         project="dogs-classification",
+        entity="awinterstetter",
+        job_type="training",
         config={
             "learning_rate": lr,
             "batch_size": batch_size,
@@ -67,8 +70,16 @@ def train(cfg: DictConfig):
     bucket = client.bucket(BUCKET_NAME)
     blob = bucket.blob("models/best_model.pt")
     blob.upload_from_filename("models/best_model.pt")
+    artifact = wandb.Artifact("best_model", type="model")
+    artifact.add_reference(f"gs://{BUCKET_NAME}/models/best_model.pt")
+    logged_artifact = wandb_logger.experiment.log_artifact(artifact)
+    wandb_logger.experiment.link_artifact(
+        artifact=logged_artifact,
+        target_path="awinterstetter/model-registry/dog_models",
+        aliases=["latest"],
+    )
 
-    print("Uploaded results to Bucket.")
+    print("Uploaded model to GCS bucket and logged to WandB model registry.")
 
 
 if __name__ == "__main__":

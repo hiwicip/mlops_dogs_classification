@@ -5,6 +5,8 @@ FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS base
 ARG DEVICE
 ENV UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/${DEVICE}
 
+WORKDIR /app
+
 COPY uv.lock uv.lock
 COPY pyproject.toml pyproject.toml
 

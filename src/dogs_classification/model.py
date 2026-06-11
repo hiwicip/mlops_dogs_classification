@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -20,6 +21,7 @@ class DogModel(LightningModule):
         classes_file: Path = CLASSES_FILE,
         lr: float = 0.001,
         batch_size: int = 32,
+        test_out_dir: str = "logs/eval",
     ):
         super().__init__()
         with open(classes_file) as f:
@@ -37,6 +39,8 @@ class DogModel(LightningModule):
         self.criterium = torch.nn.CrossEntropyLoss()
         self.lr = lr
         self.val_outputs: list[dict[str, np.ndarray]] = []
+        self.test_outputs: list[dict[str, np.ndarray]] = []
+        self.test_out_dir = test_out_dir
 
     def training_step(self, batch, batch_idx):
         img, target = batch["pixel_values"].to(self.device), batch["labels"].to(self.device)
@@ -76,11 +80,53 @@ class DogModel(LightningModule):
             }
         )
 
+    def test_step(self, batch, batch_idx):
+        img, target = batch["pixel_values"].to(self.device), batch["labels"].to(self.device)
+        y_pred = self.model(img).logits
+        loss = self.criterium(y_pred, target)
+        acc = (y_pred.argmax(dim=1) == target).float().mean()
+        self.log("test_loss", loss, on_epoch=True, prog_bar=True, batch_size=self.batch_size)
+        self.log("test_accuracy", acc, on_epoch=True, prog_bar=True, batch_size=self.batch_size)
+
+        self.test_outputs.append(
+            {
+                "preds": y_pred.argmax(dim=1).cpu().numpy(),
+                "targets": target.cpu().numpy(),
+            }
+        )
+
     def on_validation_epoch_end(self):
         all_preds = np.concatenate([o["preds"] for o in self.val_outputs])
         all_targets = np.concatenate([o["targets"] for o in self.val_outputs])
         log_visualizations(all_preds, all_targets, self.id2label)
         self.val_outputs.clear()
+
+    def on_test_epoch_end(self):
+        all_preds = np.concatenate([o["preds"] for o in self.test_outputs])
+        all_targets = np.concatenate([o["targets"] for o in self.test_outputs])
+        log_visualizations(all_preds, all_targets, self.id2label)
+        self.test_outputs.clear()
+
+        correct_per_class: dict[int, int] = defaultdict(int)
+        total_per_class: dict[int, int] = defaultdict(int)
+
+        for pred, label in zip(all_preds, all_targets):
+            total_per_class[label] += 1
+            if pred == label:
+                correct_per_class[label] += 1
+
+        class_accuracy = {int(cls): correct_per_class[cls] / total_per_class[cls] for cls in total_per_class}
+
+        table = wandb.Table(columns=["class", "accuracy"])
+        for cls, acc in class_accuracy.items():
+            table.add_data(cls, acc)
+        self.logger.experiment.log({"class_accuracy": table})
+
+        output_dir = Path(self.test_out_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        np.save(output_dir / "all_preds.npy", np.array(all_preds))
+        np.save(output_dir / "all_labels.npy", np.array(all_targets))
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.model.parameters(), lr=self.lr)
@@ -95,7 +141,7 @@ class DogModel(LightningModule):
 
     def test_dataloader(self):
         test_dataset = DogDataset(Path("data/processed/metadata.csv"), "test")
-        return torch.utils.data.DataLoader(test_dataset, self.batch_size, shuffle=True)
+        return torch.utils.data.DataLoader(test_dataset, self.batch_size, shuffle=False)
 
 
 if __name__ == "__main__":
