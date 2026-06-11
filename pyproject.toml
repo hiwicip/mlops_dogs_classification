@@ -38,6 +38,7 @@ dependencies = [
     "torch-tb-profiler>=0.4.3",
     "matplotlib>=3.10.9",
     "wandb>=0.27.0",
+    "pytorch-lightning>=2.6.5",
 ]
 
 [dependency-groups]
