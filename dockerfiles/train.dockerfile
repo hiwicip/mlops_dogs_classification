@@ -1,6 +1,8 @@
-ARG DEVICE=cpu
+ARG DEVICE=cu121
 
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS base
+FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04 AS base
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 ARG DEVICE
 ENV UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/${DEVICE}
