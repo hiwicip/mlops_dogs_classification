@@ -9,7 +9,7 @@ from sklearn.metrics import confusion_matrix
 def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict) -> None:
     num_classes = len(idx_to_class)
 
-    cm = confusion_matrix(labels, preds, normalize="true")
+    cm = confusion_matrix(labels, preds, normalize="true", labels=list(range(num_classes)))
 
     plt.figure(figsize=(12, 10))
     plt.imshow(cm)
