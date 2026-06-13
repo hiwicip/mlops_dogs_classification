@@ -1,0 +1,22 @@
+# ML data (CRITICAL)
+data/
+.dvc/
+models/
+outputs/
+logs/
+
+# Python env
+.venv/
+__pycache__/
+*.pyc
+
+# caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# git
+.git/
+
+# notebooks (optional)
+notebooks/
