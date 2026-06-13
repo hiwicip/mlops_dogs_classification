@@ -49,6 +49,20 @@ def train(
 
 
 @task
+def evaluate(
+    ctx: Context,
+    config_path: str = "../../configs",
+    config_name: str = "config.yaml",
+) -> None:
+    """Evaluate model."""
+    ctx.run(
+        f"uv run src/{PROJECT_NAME}/evaluate.py " f"--config-path {config_path} " f"--config-name {config_name}",
+        echo=True,
+        pty=not WINDOWS,
+    )
+
+
+@task
 def test(ctx: Context) -> None:
     """Run tests."""
     ctx.run("uv run coverage run -m pytest tests/", echo=True, pty=not WINDOWS)
