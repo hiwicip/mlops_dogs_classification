@@ -16,4 +16,6 @@ COPY LICENSE LICENSE
 
 RUN uv sync --frozen
 
+EXPOSE $PORT
+
 ENTRYPOINT ["uv", "run", "uvicorn", "src.dogs_classification.api:app", "--host", "0.0.0.0", "--port", "$PORT"]
