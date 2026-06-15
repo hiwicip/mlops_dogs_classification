@@ -80,7 +80,7 @@ def train(cfg: DictConfig):
     logged_artifact = wandb_logger.experiment.log_artifact(artifact)
     wandb_logger.experiment.link_artifact(
         artifact=logged_artifact,
-        target_path="awinterstetter/model-registry/dog_models",
+        target_path="wandb-registry-dog_models/best_models",
         aliases=["latest"],
     )
 
