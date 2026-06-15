@@ -39,6 +39,7 @@ dependencies = [
     "matplotlib>=3.10.9",
     "wandb>=0.27.0",
     "pytorch-lightning>=2.6.5",
+    "python-multipart>=0.0.32",
 ]
 
 [dependency-groups]
@@ -68,6 +69,7 @@ explicit = true
 
 [tool.ruff]
 line-length = 120
+ignore = ["B008"]
 
 [tool.ruff.lint]
 select = [
