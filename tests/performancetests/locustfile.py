@@ -1,4 +1,5 @@
 import io
+
 from locust import HttpUser, between, task
 from PIL import Image
 

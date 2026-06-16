@@ -1,31 +1,41 @@
+import os
 from contextlib import asynccontextmanager
 
 import torch
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from PIL import Image
 from transformers import AutoImageProcessor
 
 from dogs_classification.model import DogModel
+
+MODEL_PATH = "models/best_model.pt"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Loading model and processor")
     app.state.processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224")
     app.state.model = DogModel(model_name="google/vit-base-patch16-224")
-    state_dict = torch.load("models/best_model.pt", map_location="cpu")
-    app.state.model.load_state_dict(state_dict)
+    if os.path.exists(MODEL_PATH):
+        state_dict = torch.load(MODEL_PATH, map_location="cpu")
+        app.state.model.load_state_dict(state_dict)
+    else:
+        print(f"No fine-tuned weights found at {MODEL_PATH}, using pretrained model")
     app.state.model.eval()
-    
+
     yield
 
     print("Cleaning up resources")
     del app.state.model, app.state.processor
 
+
 app = FastAPI(title="Dog Breed Classification API", lifespan=lifespan)
+
 
 @app.get("/")
 def root():
     return {"message": "Welcome to the Dogs Classification API!"}
+
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):

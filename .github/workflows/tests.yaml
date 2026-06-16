@@ -26,23 +26,6 @@ jobs:
         run: |
           uv sync --locked --dev
 
-      - name: Cache model
-        id: cache-model
-        uses: actions/cache@v4
-        with:
-          path: models/best_model.pt
-          key: model-${{ hashFiles('models/best_model.pt.dvc') }}
-
-      - name: Authenticate to GCS
-        if: steps.cache-model.outputs.cache-hit != 'true'
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Pull model with DVC
-        if: steps.cache-model.outputs.cache-hit != 'true'
-        run: uv run dvc pull models/best_model.pt
-
       - name: Run tests
         run: |
           uv run coverage run -m pytest tests/
