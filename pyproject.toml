@@ -40,6 +40,8 @@ dependencies = [
     "wandb>=0.27.0",
     "pytorch-lightning>=2.6.5",
     "python-multipart>=0.0.32",
+    "httpx>=0.28.1",
+    "locust>=2.44.3",
 ]
 
 [dependency-groups]
@@ -52,6 +54,8 @@ dev = [
     "mypy==2.1.0",
     "mkdocs-material==9.7.6",
     "mkdocstrings-python==2.0.4",
+    "httpx>=0.28.1",
+    "pluggy>=1.6.0",
 ]
 
 [tool.uv.sources]
