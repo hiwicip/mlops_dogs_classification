@@ -2,7 +2,8 @@ docs/site/
 # data should not be in the github repository
 data/raw/Images
 data/raw/Annotation
-data/processed
+data/processed/*
+!data/processed/classes.json
 wandb
 outputs
 models

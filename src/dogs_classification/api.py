@@ -41,8 +41,8 @@ def root():
 async def predict(file: UploadFile = File(...)):
     try:
         image = Image.open(file.file).convert("RGB")
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid image file")
+    except Exception as err:
+        raise HTTPException(status_code=400, detail="Invalid image file") from err
 
     inputs = app.state.processor(images=image, return_tensors="pt")
     pixel_values = inputs["pixel_values"]
