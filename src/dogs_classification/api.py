@@ -9,11 +9,26 @@ from transformers import AutoImageProcessor
 from dogs_classification.model import DogModel
 
 MODEL_PATH = "models/best_model.pt"
+GCS_BUCKET = "mlops-dog-data-euwest4"
+GCS_BLOB = "models/best_model.pt"
+GCP_PROJECT = "mlopsdogclassification"
+
+
+def _download_model_from_gcs() -> None:
+    try:
+        from google.cloud import storage
+        client = storage.Client(project=GCP_PROJECT)
+        client.bucket(GCS_BUCKET).blob(GCS_BLOB).download_to_filename(MODEL_PATH)
+        print("Model downloaded from GCS")
+    except Exception as e:
+        print(f"Could not download model from GCS: {e}")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Loading model and processor")
+    if not os.path.exists(MODEL_PATH):
+        _download_model_from_gcs()
     app.state.processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224")
     app.state.model = DogModel(model_name="google/vit-base-patch16-224")
     if os.path.exists(MODEL_PATH):
