@@ -13,6 +13,8 @@ COPY src src/
 COPY README.md README.md
 COPY LICENSE LICENSE
 
+RUN mkdir -p models
+
 RUN uv sync --frozen --extra-index-url https://download.pytorch.org/whl/cpu
 
 EXPOSE $PORT
