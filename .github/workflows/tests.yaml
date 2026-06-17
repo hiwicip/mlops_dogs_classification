@@ -25,7 +25,6 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync --locked --dev
-          uv tree
 
       - name: Run tests
         run: |
