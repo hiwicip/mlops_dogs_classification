@@ -1,11 +1,5 @@
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS base
 
-EXPOSE 8000
-
-WORKDIR /app
-
-EXPOSE 8000
-
 WORKDIR /app
 
 COPY uv.lock uv.lock
@@ -14,7 +8,7 @@ COPY pyproject.toml pyproject.toml
 RUN uv sync --frozen --no-install-project --extra-index-url https://download.pytorch.org/whl/cpu
 
 COPY src src/
-COPY models models/
+COPY data/processed/classes.json data/processed/classes.json
 COPY README.md README.md
 COPY LICENSE LICENSE
 
