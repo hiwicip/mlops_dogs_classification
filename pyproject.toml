@@ -36,7 +36,7 @@ dependencies = [
     "typing>=3.10.0.0",
     "uvicorn==0.34.0",
     "torch-tb-profiler>=0.4.3",
-    "matplotlib>=3.10.9",
+    "matplotlib>=3.11.0",
     "wandb>=0.27.0",
     "pytorch-lightning>=2.6.5",
     "python-multipart>=0.0.32",
