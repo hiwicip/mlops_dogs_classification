@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import hydra
 import torch
 import wandb
@@ -47,9 +49,11 @@ def train(cfg: DictConfig):
         else None
     )
 
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
     checkpoint_callback = ModelCheckpoint(
         dirpath="models/",
-        filename="best_model",
+        filename=f"best_model_{timestamp}",
         monitor="val_loss",
         mode="min",
         save_top_k=1,
@@ -64,18 +68,19 @@ def train(cfg: DictConfig):
     trainer.fit(model)
 
     checkpoint = torch.load(checkpoint_callback.best_model_path)
-    torch.save(checkpoint["state_dict"], "models/best_model.pt")
+    model_path = f"models/best_model_{timestamp}.pt"
+    torch.save(checkpoint["state_dict"], model_path)
 
     client = storage.Client(project="mlopsdogclassification")
     bucket = client.bucket(BUCKET_NAME)
-    blob = bucket.blob("models/best_model.pt")
-    blob.upload_from_filename("models/best_model.pt")
+    blob = bucket.blob(f"models/best_model_{timestamp}.pt")
+    blob.upload_from_filename(model_path)
     artifact = wandb.Artifact("best_model", type="model")
     artifact.add_reference(f"gs://{BUCKET_NAME}/models/best_model.pt")
     logged_artifact = wandb_logger.experiment.log_artifact(artifact)
     wandb_logger.experiment.link_artifact(
         artifact=logged_artifact,
-        target_path="awinterstetter/model-registry/dog_models",
+        target_path="wandb-registry-dog_models/best_models",
         aliases=["latest"],
     )
 

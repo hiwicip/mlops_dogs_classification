@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -25,7 +25,6 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync --locked --dev
-          uv tree
 
       - name: Run tests
         run: |
