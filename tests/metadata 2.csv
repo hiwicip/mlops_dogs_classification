@@ -1,4 +1,0 @@
-image_path,label,breed,split
-tests/data/train/image_0.pt,0,Chihuahua,train
-tests/data/test/image_0.pt,0,Chihuahua,test
-tests/data/eval/image_0.pt,0,Chihuahua,eval
