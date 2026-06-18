@@ -3,6 +3,7 @@ import json
 import bentoml
 import numpy as np
 from onnxruntime import InferenceSession
+from PIL import Image
 from transformers import AutoImageProcessor
 
 MODEL_NAME = "google/vit-base-patch16-224"
@@ -20,9 +21,11 @@ class DogBreedClassificationService:
         self.idx_to_class = {idx: name for name, idx in label2id.items()}
 
     @bentoml.api
-    def predict(self, image: np.ndarray):
+    def predict(self, image: Image.Image) -> dict:
         # Preprocess input
-        inputs = self.processor(images=image, return_tensors="np")
+        image = image.convert("RGB")
+        image_np = np.array(image)
+        inputs = self.processor(images=image_np, return_tensors="np")
 
         ort_inputs = {"pixel_values": inputs["pixel_values"].astype(np.float32)}
 
@@ -32,9 +35,11 @@ class DogBreedClassificationService:
             ort_inputs,
         )[0]
         prediction = int(np.argmax(logits, axis=1)[0])
-        confidence = float(np.max(logits, axis=1)[0])
+        # Softmax for confidence
+        exp = np.exp(logits - np.max(logits, axis=1, keepdims=True))
+        probs = exp / exp.sum(axis=1, keepdims=True)
+        confidence = float(np.max(probs))
         return {
             "predicted_class": self.idx_to_class[prediction],
-            "class_id": prediction,
             "confidence": confidence,
         }

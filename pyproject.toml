@@ -44,6 +44,8 @@ dependencies = [
     "locust>=2.44.3",
     "onnx>=1.22.0",
     "onnxscript>=0.7.0",
+    "bentoml>=1.4.39",
+    "onnxruntime>=1.27.0",
 ]
 
 [dependency-groups]
