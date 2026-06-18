@@ -14,30 +14,21 @@ PROJECT_ID = "mlopsdogclassification"
 MODEL_NAME = "google/vit-base-patch16-224"
 
 checkpoint_path = Path("models")
-gcs_checkpoint_prefix = "models"
 
 client = storage.Client(project=PROJECT_ID)
 bucket = client.bucket(BUCKET_NAME)
 
 checkpoint_path.mkdir(parents=True, exist_ok=True)
 
-for blob in bucket.list_blobs(prefix=gcs_checkpoint_prefix):
-    if blob.name.endswith("/"):
-        continue
+blob = bucket.blob("models/best_model.pt")
 
-    rel_path = Path(blob.name).relative_to(gcs_checkpoint_prefix)
-    dest_path = checkpoint_path / rel_path
+local_path = checkpoint_path / "best_model.pt"
+blob.download_to_filename(local_path)
 
-    dest_path.parent.mkdir(parents=True, exist_ok=True)
-    blob.download_to_filename(dest_path)
-
-    print(f"Downloaded {blob.name} -> {dest_path}")
-
-checkpoint_file = next(checkpoint_path.glob("best_model_*.pt"))
-print(f"Using checkpoint: {checkpoint_file}")
+print(f"Downloaded {blob.name} -> {local_path}")
 
 model = DogModel(model_name=MODEL_NAME)
-state_dict = torch.load(checkpoint_file, map_location="cpu")
+state_dict = torch.load(local_path, map_location="cpu")
 model.load_state_dict(state_dict)
 model.eval()
 
@@ -71,4 +62,3 @@ onnx_model = onnx.load(str(onnx_path))
 onnx.checker.check_model(onnx_model)
 
 print("ONNX model verified.")
-print(onnx.helper.printable_graph(onnx_model.graph))
