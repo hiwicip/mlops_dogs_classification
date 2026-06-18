@@ -17,6 +17,7 @@ GCP_PROJECT = "mlopsdogclassification"
 def _download_model_from_gcs() -> None:
     try:
         from google.cloud import storage
+
         client = storage.Client(project=GCP_PROJECT)
         client.bucket(GCS_BUCKET).blob(GCS_BLOB).download_to_filename(MODEL_PATH)
         print("Model downloaded from GCS")
