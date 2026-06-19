@@ -149,6 +149,9 @@ class DogModel(LightningModule):
         test_dataset = DogDataset(Path("data/processed/metadata.csv"), "eval")
         return torch.utils.data.DataLoader(test_dataset, self.batch_size, shuffle=False)
 
+    def forward(self, pixel_values):
+        return self.model(pixel_values).logits
+
 
 if __name__ == "__main__":
     model = DogModel()

@@ -1,5 +1,6 @@
 data/raw/
 data/processed/
+!data/processed/classes.json
 .dvc/cache
 models/
 outputs/
