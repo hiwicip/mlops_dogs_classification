@@ -24,6 +24,10 @@ class DogModel(LightningModule):
         test_out_dir: str = "logs/eval",
     ):
         super().__init__()
+        if lr <= 0:
+            raise ValueError(f"Learning rate must be positive, got {lr}")
+        if batch_size < 1:
+            raise ValueError(f"Batch size must be at least 1, got {batch_size}")
         with open(classes_file) as f:
             label2id = json.load(f)
         id2label = {v: k for k, v in label2id.items()}
@@ -44,6 +48,8 @@ class DogModel(LightningModule):
 
     def training_step(self, batch, batch_idx):
         img, target = batch["pixel_values"].to(self.device), batch["labels"].to(self.device)
+        if img.ndim != 4 or img.shape[1] != 3 or img.shape[2] != 224 or img.shape[3] != 224:
+            raise ValueError(f"Expected input shape [batch, 3, 224, 224], got {list(img.shape)}")
         y_pred = self.model(img).logits
         loss = self.criterium(y_pred, target)
         acc = (y_pred.argmax(dim=1) == target).float().mean()
