@@ -49,7 +49,7 @@ class DogModel(LightningModule):
         acc = (y_pred.argmax(dim=1) == target).float().mean()
         self.log("train_loss", loss, on_step=True, prog_bar=True)
         self.log("train_accuracy", acc, on_step=True, prog_bar=True)
-        if batch_idx % 100 == 0:
+        if batch_idx % 100 == 0 and self.logger is not None:
             pred_labels = y_pred.argmax(dim=1)
             true_breeds = batch["breed"]
             self.logger.experiment.log(

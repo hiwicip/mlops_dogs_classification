@@ -104,12 +104,12 @@ def test_checkpoint_monitors_val_loss(hydra_cfg):
 
     captured: list = []
     with (
-        patch("dogs_classification.train.WandbLogger") as mock_wl,
-        patch("dogs_classification.train.Trainer", side_effect=_make_mock_trainer(captured)),
-        patch("dogs_classification.train.storage.Client"),
-        patch("dogs_classification.train.torch.save"),
-        patch("dogs_classification.train.torch.load", return_value={"state_dict": {}}),
-        patch("dogs_classification.train.DogModel"),
+        patch("src.dogs_classification.train.WandbLogger") as mock_wl,
+        patch("src.dogs_classification.train.Trainer", side_effect=_make_mock_trainer(captured)),
+        patch("src.dogs_classification.train.storage.Client"),
+        patch("src.dogs_classification.train.torch.save"),
+        patch("src.dogs_classification.train.torch.load", return_value={"state_dict": {}}),
+        patch("src.dogs_classification.train.DogModel"),
     ):
         mock_wl.return_value.experiment = MagicMock()
         train.__wrapped__(hydra_cfg)
@@ -129,12 +129,12 @@ def test_gcs_upload_called_after_training(hydra_cfg):
     mock_client.bucket.return_value.blob.return_value = mock_blob
 
     with (
-        patch("dogs_classification.train.WandbLogger") as mock_wl,
-        patch("dogs_classification.train.Trainer", side_effect=_make_mock_trainer([])),
-        patch("dogs_classification.train.storage.Client", return_value=mock_client),
-        patch("dogs_classification.train.torch.save"),
-        patch("dogs_classification.train.torch.load", return_value={"state_dict": {}}),
-        patch("dogs_classification.train.DogModel"),
+        patch("src.dogs_classification.train.WandbLogger") as mock_wl,
+        patch("src.dogs_classification.train.Trainer", side_effect=_make_mock_trainer([])),
+        patch("src.dogs_classification.train.storage.Client", return_value=mock_client),
+        patch("src.dogs_classification.train.torch.save"),
+        patch("src.dogs_classification.train.torch.load", return_value={"state_dict": {}}),
+        patch("src.dogs_classification.train.DogModel"),
     ):
         mock_wl.return_value.experiment = MagicMock()
         train.__wrapped__(hydra_cfg)
