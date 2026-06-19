@@ -35,4 +35,4 @@ jobs:
 
       - name: mypy type checking
         run: |
-          uv run mypy .
+          uv run mypy src/
