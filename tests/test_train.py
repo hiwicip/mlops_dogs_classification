@@ -51,7 +51,9 @@ def test_loss_decreases(model):
     trainer = Trainer(max_epochs=5, overfit_batches=1, logger=False, enable_checkpointing=False)
     trainer.fit(model)
     # Random baseline for 80 classes ≈ log(80) ≈ 4.38; after 5 steps it must be lower
-    assert trainer.callback_metrics["train_loss"].item() < torch.log(torch.tensor(80.0)).item()
+    assert (
+        trainer.callback_metrics["train_loss"].item() < torch.log(torch.tensor(80.0)).item()
+    ), "Loss did not decrease below random baseline after 5 epochs on a fixed batch"
 
 
 def test_parameters_updated(model):
@@ -60,7 +62,9 @@ def test_parameters_updated(model):
     trainer = Trainer(max_epochs=1, fast_dev_run=True, logger=False, enable_checkpointing=False)
     trainer.fit(model)
     params_after = [p.data for p in model.parameters()]
-    assert any(not torch.equal(before, after) for before, after in zip(params_before, params_after, strict=True))
+    assert any(
+        not torch.equal(before, after) for before, after in zip(params_before, params_after, strict=True)
+    ), "No parameters changed after a training step — optimizer may not be updating weights"
 
 
 def test_overfit_one_batch(model):
@@ -115,9 +119,11 @@ def test_checkpoint_monitors_val_loss(hydra_cfg):
         train.__wrapped__(hydra_cfg)
 
     checkpoint_cb = next(c for c in captured if isinstance(c, ModelCheckpoint))
-    assert checkpoint_cb.monitor == "val_loss"
-    assert checkpoint_cb.mode == "min"
-    assert checkpoint_cb.save_top_k == 1
+    assert checkpoint_cb.monitor == "val_loss", f"Checkpoint should monitor 'val_loss', got '{checkpoint_cb.monitor}'"
+    assert checkpoint_cb.mode == "min", f"Checkpoint mode should be 'min', got '{checkpoint_cb.mode}'"
+    assert (
+        checkpoint_cb.save_top_k == 1
+    ), f"Checkpoint should save top 1 model, got save_top_k={checkpoint_cb.save_top_k}"
 
 
 def test_gcs_upload_called_after_training(hydra_cfg):
