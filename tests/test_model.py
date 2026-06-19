@@ -34,13 +34,12 @@ def test_model_no_nan_output():
     assert not torch.isnan(out).any(), "Model output contains NaN values"
 
 
-def test_model_different_batch_sizes():
+@pytest.mark.parametrize("batch_size", [1, 8, 32, 64])
+def test_model_different_batch_sizes(batch_size):
     """Model should handle any batch size."""
     model = DogModel()
-    for bs in [1, 8, 32, 64]:
-        x = torch.randn(bs, 3, 224, 224)
-        out = model.model(x).logits
-        assert out.shape[0] == bs, f"Expected batch size {bs} in output, got {out.shape[0]}"
+    out = model.model(torch.randn(batch_size, 3, 224, 224)).logits
+    assert out.shape[0] == batch_size, f"Expected batch size {batch_size} in output, got {out.shape[0]}"
 
 
 def test_model_parameter_count():
@@ -60,24 +59,32 @@ def test_model_gradients():
         assert p.grad is not None, f"No grad for {name}"
 
 
-def test_invalid_lr_raises():
+@pytest.mark.parametrize("lr", [0, -0.1, -1e-5])
+def test_invalid_lr_raises(lr):
     """Non-positive learning rate should raise ValueError."""
     with pytest.raises(ValueError, match="Learning rate must be positive"):
-        DogModel(lr=0)
-    with pytest.raises(ValueError, match="Learning rate must be positive"):
-        DogModel(lr=-0.1)
+        DogModel(lr=lr)
 
 
-def test_invalid_batch_size_raises():
+@pytest.mark.parametrize("batch_size", [0, -1, -32])
+def test_invalid_batch_size_raises(batch_size):
     """Batch size below 1 should raise ValueError."""
     with pytest.raises(ValueError, match="Batch size must be at least 1"):
-        DogModel(batch_size=0)
+        DogModel(batch_size=batch_size)
 
 
-def test_invalid_input_shape_raises():
+@pytest.mark.parametrize(
+    "shape",
+    [
+        (4, 1, 28, 28),  # wrong channels and spatial size
+        (4, 3, 112, 112),  # correct channels, wrong spatial size
+        (4, 3, 224),  # missing spatial dimension (3D instead of 4D)
+    ],
+)
+def test_invalid_input_shape_raises(shape):
     """Wrong input shape to training_step should raise ValueError."""
     model = DogModel()
     model.eval()
-    batch = {"pixel_values": torch.randn(4, 1, 28, 28), "labels": torch.randint(0, 80, (4,)), "breed": ["x"] * 4}
+    batch = {"pixel_values": torch.randn(*shape), "labels": torch.randint(0, 80, (4,)), "breed": ["x"] * 4}
     with pytest.raises(ValueError, match="Expected input shape"):
         model.training_step(batch, batch_idx=0)
