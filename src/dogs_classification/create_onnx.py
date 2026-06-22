@@ -64,3 +64,7 @@ onnx.checker.check_model(onnx_model)
 print(onnx.helper.printable_graph(onnx_model.graph))
 
 print("ONNX model verified.")
+
+# upload the ONNX model back to GCS
+onnx_blob = bucket.blob("models/dog_classifier.onnx")
+onnx_blob.upload_from_filename(str(onnx_path))
