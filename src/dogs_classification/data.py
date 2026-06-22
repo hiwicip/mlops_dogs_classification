@@ -1,5 +1,6 @@
 import json
 import shutil
+import warnings
 from pathlib import Path
 
 import kagglehub
@@ -119,6 +120,12 @@ class DogDataset(Dataset):
         """Return a given sample from the dataset."""
         row = self.df.iloc[index]
         pixel_values = torch.load(row["image_path"])
+        if pixel_values.shape != torch.Size([3, 224, 224]):
+            warnings.warn(
+                f"Unexpected image shape {list(pixel_values.shape)} at index {index}, expected [3, 224, 224]",
+                UserWarning,
+                stacklevel=2,
+            )
         label = int(row["label"])
         breed = row["breed"]
 

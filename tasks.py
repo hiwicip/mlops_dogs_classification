@@ -72,24 +72,22 @@ def test(ctx: Context) -> None:
 @task
 def docker_build(
     ctx: Context,
-    dockerfile: str = "dockerfiles/train.dockerfile",
+    image_name: str,
+    dockerfile: str,
     progress: str = "plain",
     platform: str = "linux/amd64",
-    image_name: str = "",
     device: str = "cpu",
     push: bool = False,
 ) -> None:
     """Build docker image."""
-    tag = (
-        image_name or f"europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-train:{device}"
-    )
     command = (
         f"docker build"
         f" --platform {platform}"
-        f" -t {tag}"
+        f" -f {dockerfile}"
+        f" -t {image_name}"
         f" --build-arg DEVICE={device}"
-        f" . -f {dockerfile}"
         f" --progress={progress}"
+        f" ."
     )
     if push:
         command += " --push"

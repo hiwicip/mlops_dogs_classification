@@ -8,14 +8,13 @@ COPY pyproject.toml pyproject.toml
 RUN uv sync --frozen --no-install-project --extra-index-url https://download.pytorch.org/whl/cpu
 
 COPY src src/
-COPY data/processed/classes.json data/processed/classes.json
 COPY README.md README.md
 COPY LICENSE LICENSE
 
 RUN mkdir -p models
 
+# COPY models/dog_classifier.onnx models/dog_classifier.onnx
+
 RUN uv sync --frozen --extra-index-url https://download.pytorch.org/whl/cpu
 
-EXPOSE $PORT
-
-ENTRYPOINT ["sh", "-c", "uv run uvicorn dogs_classification.api:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["uv", "run", "bentoml", "serve", "src.dogs_classification.bentoml:DogBreedClassificationService"]

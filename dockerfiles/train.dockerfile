@@ -18,7 +18,6 @@ RUN uv sync --frozen --no-install-project
 COPY src src/
 COPY configs configs/
 COPY .dvc .dvc/
-COPY .git .git
 COPY data/processed.dvc data/processed.dvc
 COPY README.md README.md
 COPY LICENSE LICENSE
