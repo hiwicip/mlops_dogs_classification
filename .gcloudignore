@@ -1,6 +1,9 @@
 # ML data (CRITICAL)
-data/
-.dvc/
+data/raw/
+data/processed/*
+!data/processed/classes.json
+.dvc/cache/
+.dvc/tmp/
 models/
 outputs/
 logs/
