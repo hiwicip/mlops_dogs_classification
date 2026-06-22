@@ -8,13 +8,32 @@ from transformers import AutoImageProcessor
 
 MODEL_NAME = "google/vit-base-patch16-224"
 
+ONNX_MODEL_PATH = "models/dog_classifier.onnx"
+GCS_BUCKET = "mlops-dog-data-euwest4"
+GCS_BLOB = "models/dog_classifier.onnx"
+GCP_PROJECT = "mlopsdogclassification"
+
+
+def _download_model_from_gcs() -> None:
+    try:
+        from google.cloud import storage
+
+        client = storage.Client(project=GCP_PROJECT)
+        client.bucket(GCS_BUCKET).blob(GCS_BLOB).download_to_filename(ONNX_MODEL_PATH)
+        print("Model downloaded from GCS")
+    except Exception as e:
+        print(f"Could not download model from GCS: {e}")
+
+
+_download_model_from_gcs()
+
 
 @bentoml.service
 class DogBreedClassificationService:
     def __init__(self):
         super().__init__()
         # Note that the onnx must be there in order for this to work
-        self.model = InferenceSession("models/dog_classifier.onnx")
+        self.model = InferenceSession(ONNX_MODEL_PATH)
         self.processor = AutoImageProcessor.from_pretrained(MODEL_NAME)
         with open("data/processed/classes.json") as f:
             label2id = json.load(f)
