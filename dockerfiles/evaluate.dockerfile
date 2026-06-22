@@ -20,7 +20,6 @@ ENV UV_PYTHON=3.13
 ARG DEVICE
 ENV UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/${DEVICE}
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen
-COPY .git .git
 RUN mkdir -p models data
 
 #For pulling data and best model from the cloud

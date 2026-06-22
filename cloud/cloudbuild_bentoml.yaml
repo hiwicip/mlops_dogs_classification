@@ -3,11 +3,11 @@ steps:
   id: 'Build bentoml image'
   args: [
     'build',
-    '.',
     '-t',
     'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest',
     '-f',
-    'dockerfiles/bentoml.dockerfile'
+    'dockerfiles/bentoml.dockerfile',
+    '.'
   ]
 options:
   logging: CLOUD_LOGGING_ONLY
