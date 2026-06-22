@@ -31,5 +31,38 @@ steps:
     'push',
     'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-api:latest'
   ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build evaluate image'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-evaluate:latest',
+    '-f',
+    'dockerfiles/evaluate.dockerfile'
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push evaluate image'
+  args: [
+    'push',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-evaluate:latest'
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build bento image'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bento:latest',
+    '-f',
+    'dockerfiles/bento.dockerfile'
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push bento image'
+  args: [
+    'push',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bento:latest'
+  ]
+
 options:
   logging: CLOUD_LOGGING_ONLY
