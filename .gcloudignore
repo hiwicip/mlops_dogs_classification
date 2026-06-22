@@ -1,6 +1,6 @@
 # ML data (CRITICAL)
-data/
-!data/processed.dvc
+data/raw/
+data/processed/
 .dvc/cache/
 .dvc/tmp/
 models/
