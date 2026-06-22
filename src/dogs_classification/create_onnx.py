@@ -61,4 +61,6 @@ print(f"Model exported to {onnx_path}")
 onnx_model = onnx.load(str(onnx_path))
 onnx.checker.check_model(onnx_model)
 
+print(onnx.helper.printable_graph(onnx_model.graph))
+
 print("ONNX model verified.")
