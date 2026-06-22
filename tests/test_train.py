@@ -46,7 +46,7 @@ def test_training_step_runs(model):
     trainer.fit(model)
 
 
-#def test_loss_decreases(model):
+# def test_loss_decreases(model):
 #    """Training loss should decrease when repeatedly fitting the same single batch."""
 #    trainer = Trainer(max_epochs=5, overfit_batches=1, logger=False, enable_checkpointing=False)
 #    trainer.fit(model)
