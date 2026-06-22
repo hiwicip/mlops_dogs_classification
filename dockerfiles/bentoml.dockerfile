@@ -7,7 +7,9 @@ COPY pyproject.toml pyproject.toml
 
 RUN uv sync --frozen --no-install-project --extra-index-url https://download.pytorch.org/whl/cpu
 
-COPY src/dogs_classification/bentoml.py .
+COPY src src/
+COPY README.md README.md
+COPY LICENSE LICENSE
 
 RUN mkdir -p models
 
