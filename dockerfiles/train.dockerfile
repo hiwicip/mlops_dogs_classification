@@ -1,4 +1,13 @@
-FROM ghcr.io/astral-sh/uv:python3.12-alpine AS base
+ARG DEVICE=cu121
+
+FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04 AS base
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+ARG DEVICE
+ENV UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/${DEVICE}
+
+WORKDIR /app
 
 COPY uv.lock uv.lock
 COPY pyproject.toml pyproject.toml
@@ -6,9 +15,12 @@ COPY pyproject.toml pyproject.toml
 RUN uv sync --frozen --no-install-project
 
 COPY src src/
+COPY configs configs/
+COPY .dvc .dvc/
+COPY data/processed.dvc data/processed.dvc
 COPY README.md README.md
 COPY LICENSE LICENSE
 
 RUN uv sync --frozen
 
-ENTRYPOINT ["uv", "run", "src/dogs_classification/train.py"]
+ENTRYPOINT ["sh", "-c", "uv run dvc pull && uv run src/dogs_classification/train.py"]

@@ -1,0 +1,22 @@
+method: random
+program: src/dogs_classification/train.py
+name: MLOPs Sweep
+project: dogs-classification
+entity: awinterstetter
+metric:
+  goal: minimize
+  name: val_loss
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - ${args_no_hyphens}
+parameters:
+  training.lr:
+    min: 0.00001
+    max: 0.01
+  training.batch_size:
+    values: [16, 32, 64]
+  training.epochs:
+    values: [10, 20, 30]
+run_cap: 10

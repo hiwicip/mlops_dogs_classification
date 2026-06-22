@@ -1,5 +1,6 @@
 import json
 import shutil
+import warnings
 from pathlib import Path
 
 import kagglehub
@@ -20,6 +21,89 @@ SEED = 42
 
 processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224")
 
+KEEP_BREEDS = {
+    "Chihuahua",
+    "Maltese_dog",
+    "Pekinese",
+    "Shih-Tzu",
+    "Blenheim_spaniel",
+    "papillon",
+    "toy_terrier",
+    "Rhodesian_ridgeback",
+    "basset",
+    "beagle",
+    "bloodhound",
+    "Italian_greyhound",
+    "whippet",
+    "Norwegian_elkhound",
+    "Weimaraner",
+    "Staffordshire_bullterrier",
+    "American_Staffordshire_terrier",
+    "Border_terrier",
+    "Irish_terrier",
+    "Yorkshire_terrier",
+    "wire-haired_fox_terrier",
+    "Airedale",
+    "cairn",
+    "Australian_terrier",
+    "Boston_bull",
+    "miniature_schnauzer",
+    "Scotch_terrier",
+    "silky_terrier",
+    "soft-coated_wheaten_terrier",
+    "West_Highland_white_terrier",
+    "Lhasa",
+    "golden_retriever",
+    "Labrador_retriever",
+    "Chesapeake_Bay_retriever",
+    "German_short-haired_pointer",
+    "vizsla",
+    "English_setter",
+    "Irish_setter",
+    "Brittany_spaniel",
+    "English_springer",
+    "cocker_spaniel",
+    "schipperke",
+    "malinois",
+    "kelpie",
+    "Old_English_sheepdog",
+    "Shetland_sheepdog",
+    "collie",
+    "Border_collie",
+    "Rottweiler",
+    "German_shepherd",
+    "Doberman",
+    "miniature_pinscher",
+    "Bernese_mountain_dog",
+    "boxer",
+    "bull_mastiff",
+    "Tibetan_mastiff",
+    "French_bulldog",
+    "Great_Dane",
+    "Saint_Bernard",
+    "Eskimo_dog",
+    "malamute",
+    "Siberian_husky",
+    "affenpinscher",
+    "basenji",
+    "pug",
+    "Newfoundland",
+    "Great_Pyrenees",
+    "Samoyed",
+    "Pomeranian",
+    "chow",
+    "keeshond",
+    "Brabancon_griffon",
+    "Pembroke",
+    "Cardigan",
+    "toy_poodle",
+    "miniature_poodle",
+    "standard_poodle",
+    "dingo",
+    "dhole",
+    "African_hunting_dog",
+}
+
 
 class DogDataset(Dataset):
     """Custom dog breed dataset."""
@@ -36,6 +120,12 @@ class DogDataset(Dataset):
         """Return a given sample from the dataset."""
         row = self.df.iloc[index]
         pixel_values = torch.load(row["image_path"])
+        if pixel_values.shape != torch.Size([3, 224, 224]):
+            warnings.warn(
+                f"Unexpected image shape {list(pixel_values.shape)} at index {index}, expected [3, 224, 224]",
+                UserWarning,
+                stacklevel=2,
+            )
         label = int(row["label"])
         breed = row["breed"]
 
@@ -56,7 +146,7 @@ def download_data() -> Path:
     RAW_DIR.parent.mkdir(parents=True, exist_ok=True)
 
     print(f"Copying dataset to {RAW_DIR}...")
-    shutil.copytree(source_dir, RAW_DIR)
+    shutil.copytree(source_dir, RAW_DIR, dirs_exist_ok=True)
 
     print(f"Dataset available at: {RAW_DIR}")
 
@@ -78,7 +168,9 @@ def preprocess(data_path: Path = RAW_DIR, output_folder: Path = PROCESSED_DIR) -
     test_dir.mkdir(parents=True, exist_ok=True)
     eval_dir.mkdir(parents=True, exist_ok=True)
 
-    breed_dirs = sorted([d for d in data_path.iterdir() if d.is_dir()])
+    breed_dirs = sorted([d for d in data_path.iterdir() if d.is_dir() and d.name.split("-", 1)[1] in KEEP_BREEDS])
+
+    print(f"Using {len(breed_dirs)} breeds")
 
     classes = [d.name.split("-", 1)[1] for d in breed_dirs]
 

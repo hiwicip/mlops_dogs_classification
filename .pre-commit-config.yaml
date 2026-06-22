@@ -9,6 +9,7 @@ repos:
     -   id: check-yaml
     -   id: check-added-large-files
         exclude: \.dvc$
+        args: [--maxkb=700]
     -   id: check-ast
     -   id: check-toml
     -   id: check-merge-conflict
@@ -26,3 +27,5 @@ repos:
   hooks:
     - id: mypy
       additional_dependencies: [types-PyYAML, types-tqdm]
+      pass_filenames: false
+      args: ["src/"]

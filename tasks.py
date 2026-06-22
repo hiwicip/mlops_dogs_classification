@@ -49,6 +49,20 @@ def train(
 
 
 @task
+def evaluate(
+    ctx: Context,
+    config_path: str = "../../configs",
+    config_name: str = "config.yaml",
+) -> None:
+    """Evaluate model."""
+    ctx.run(
+        f"uv run src/{PROJECT_NAME}/evaluate.py " f"--config-path {config_path} " f"--config-name {config_name}",
+        echo=True,
+        pty=not WINDOWS,
+    )
+
+
+@task
 def test(ctx: Context) -> None:
     """Run tests."""
     ctx.run("uv run coverage run -m pytest tests/", echo=True, pty=not WINDOWS)
@@ -56,16 +70,28 @@ def test(ctx: Context) -> None:
 
 
 @task
-def docker_build(ctx: Context, progress: str = "plain") -> None:
-    """Build docker images."""
-    ctx.run(
-        f"docker build -t train:latest . -f dockerfiles/train.dockerfile --progress={progress}",
-        echo=True,
-        pty=not WINDOWS,
+def docker_build(
+    ctx: Context,
+    image_name: str,
+    dockerfile: str = "dockerfiles/train.dockerfile",
+    progress: str = "plain",
+    platform: str = "linux/amd64",
+    device: str = "cpu",
+    push: bool = False,
+) -> None:
+    """Build docker image."""
+    tag = image_name
+    command = (
+        f"docker build"
+        f" --platform {platform}"
+        f" -t {tag}"
+        f" --build-arg DEVICE={device}"
+        f" . -f {dockerfile}"
+        f" --progress={progress}"
     )
-    ctx.run(
-        f"docker build -t api:latest . -f dockerfiles/api.dockerfile --progress={progress}", echo=True, pty=not WINDOWS
-    )
+    if push:
+        command += " --push"
+    ctx.run(command, echo=True, pty=not WINDOWS)
 
 
 @task
