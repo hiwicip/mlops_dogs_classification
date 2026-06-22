@@ -91,12 +91,20 @@ select = [
 [tool.ruff.lint.isort]
 known-third-party = ["wandb"]
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:.*LeafSpec.*",
+    "ignore:.*num_workers.*:UserWarning",
+    "ignore:.*eval mode.*:UserWarning",
+]
+
 [tool.coverage.run]
 source = ["src"]
 omit = ["tests/*"]
 
 [tool.mypy]
 ignore_missing_imports = true
+mypy_path = "src"
 
 [[tool.mypy.overrides]]
 module = "wandb"
