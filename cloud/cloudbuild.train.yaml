@@ -1,0 +1,20 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build train image'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-train:latest',
+    '-f',
+    'dockerfiles/train.dockerfile'
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push train image'
+  args: [
+    'push',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-train:latest'
+  ]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
