@@ -1,0 +1,28 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build bentoml image'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest',
+    '-f',
+    'dockerfiles/bentoml.dockerfile'
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push bentoml image'
+  args: [
+    'push',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest'
+  ]
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy to Cloud Run'
+  args: [
+    'gcloud', 'run', 'deploy', 'dogs-bentoml',
+    '--image', 'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest',
+    '--region', 'europe-west4',
+    '--project', 'mlopsdogclassification',
+    '--platform', 'managed'
+  ]
+options:
+  logging: CLOUD_LOGGING_ONLY
