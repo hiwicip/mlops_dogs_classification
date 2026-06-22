@@ -101,6 +101,14 @@ def docker_run(ctx: Context, image: str) -> None:
 
 
 @task
+def bentoml(ctx: Context) -> None:
+    """Export model to BentoML."""
+    ctx.run(
+        "uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService", echo=True, pty=not WINDOWS
+    )
+
+
+@task
 # Documentation commands
 @task
 def build_docs(ctx: Context) -> None:
