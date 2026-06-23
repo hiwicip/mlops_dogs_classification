@@ -10,8 +10,8 @@ LOGDIR = "logs/performance"
 
 
 def load_model(model_checkpoint: str) -> DogModel:
+    wandb.login(key=os.getenv("WANDB_API_KEY"))
     api = wandb.Api(
-        api_key=os.getenv("WANDB_API_KEY"),
         overrides={"entity": os.getenv("WANDB_ENTITY"), "project": os.getenv("WANDB_PROJECT")},
     )
     artifact = api.artifact(model_checkpoint)
