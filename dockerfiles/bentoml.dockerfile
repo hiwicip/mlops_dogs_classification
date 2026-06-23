@@ -18,4 +18,6 @@ COPY models/dog_classifier.onnx models/dog_classifier.onnx
 
 RUN uv sync --frozen --extra-index-url https://download.pytorch.org/whl/cpu
 
+RUN uv run python -c "from transformers import AutoImageProcessor; AutoImageProcessor.from_pretrained('google/vit-base-patch16-224')"
+
 CMD ["uv", "run", "bentoml", "serve", "src.dogs_classification.bentoml:DogBreedClassificationService"]
