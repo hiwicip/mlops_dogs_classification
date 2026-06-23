@@ -25,7 +25,9 @@ steps:
     '--image', 'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest',
     '--region', 'europe-west4',
     '--project', 'mlopsdogclassification',
-    '--platform', 'managed'
+    '--platform', 'managed',
+    '--port', '3000',
+    '--memory', '4Gi'
   ]
 options:
   logging: CLOUD_LOGGING_ONLY
