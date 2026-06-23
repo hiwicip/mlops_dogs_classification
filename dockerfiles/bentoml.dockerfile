@@ -14,7 +14,7 @@ COPY LICENSE LICENSE
 RUN mkdir -p models data/processed
 COPY data/processed/classes.json data/processed/classes.json
 
-RUN uv run python -c "from google.cloud import storage; storage.Client(project='mlopsdogclassification').bucket('mlops-dog-data-euwest4').blob('models/dog_classifier.onnx').download_to_filename('models/dog_classifier.onnx')"
+COPY models/dog_classifier.onnx models/dog_classifier.onnx
 
 RUN uv sync --frozen --extra-index-url https://download.pytorch.org/whl/cpu
 
