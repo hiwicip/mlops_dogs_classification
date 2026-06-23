@@ -7,25 +7,7 @@ from PIL import Image
 from transformers import AutoImageProcessor
 
 MODEL_NAME = "google/vit-base-patch16-224"
-
 ONNX_MODEL_PATH = "models/dog_classifier.onnx"
-GCS_BUCKET = "mlops-dog-data-euwest4"
-GCS_BLOB = "models/dog_classifier.onnx"
-GCP_PROJECT = "mlopsdogclassification"
-
-
-def _download_model_from_gcs() -> None:
-    try:
-        from google.cloud import storage
-
-        client = storage.Client(project=GCP_PROJECT)
-        client.bucket(GCS_BUCKET).blob(GCS_BLOB).download_to_filename(ONNX_MODEL_PATH)
-        print("Model downloaded from GCS")
-    except Exception as e:
-        print(f"Could not download model from GCS: {e}")
-
-
-_download_model_from_gcs()
 
 
 @bentoml.service
