@@ -1,7 +1,7 @@
 steps:
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   id: 'Download ONNX model'
-  args: ['gsutil', 'cp', 'gs://mlops-dog-data-euwest4/models/dog_classifier.onnx', 'models/dog_classifier.onnx']
+  args: ['gsutil', 'cp', 'gs://mlops-dog-data-euwest4/models/dog_classifier.onnx*', 'models/']
 - name: 'gcr.io/cloud-builders/docker'
   id: 'Build bentoml image'
   args: [
