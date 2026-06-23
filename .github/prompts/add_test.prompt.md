@@ -4,8 +4,7 @@ applyTo: "tests/**/*.py"
 
 # Testing Guidelines for MLOps Systems
 
-The goal of testing in MLOps is **not** to verify model performance, but to ensure that
-**data pipelines, models, and ML infrastructure behave correctly, reproducibly, and reliably**.
+The goal of testing in MLOps is **not** to verify model performance, but to ensure that **data pipelines, models, and ML infrastructure behave correctly, reproducibly, and reliably**.
 
 ## Core Principles
 - Use **pytest** as the primary testing framework
