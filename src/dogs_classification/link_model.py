@@ -31,7 +31,7 @@ def link_model(artifact_path: str, aliases: list[str] | None = None) -> None:
     artifact_name, _ = artifact_name_version.split(":")
 
     artifact = api.artifact(artifact_path)
-    artifact.link(target_path=f"{os.getenv('WANDB_TEAM')}/model-registry/{artifact_name}", aliases=aliases)
+    artifact.link(target_path=f"wandb-registry-dog_models/{artifact_name}", aliases=aliases)
     artifact.save()
     typer.echo(f"Artifact {artifact_path} linked to {aliases}")
 
