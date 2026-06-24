@@ -18,7 +18,10 @@ def load_model(model_checkpoint: str) -> DogModel:
     artifact = api.artifact(model_checkpoint)
     artifact.download(root=LOGDIR)
     file_name = artifact.files()[0].name
-    return DogModel.load_from_checkpoint(f"{LOGDIR}/{file_name}")
+    model = DogModel()
+    state_dict = torch.load(f"{LOGDIR}/{file_name}", map_location="cpu")
+    model.load_state_dict(state_dict)
+    return model
 
 
 def test_model_speed():
