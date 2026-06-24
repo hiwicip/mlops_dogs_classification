@@ -79,11 +79,11 @@ jobs:
       run: |
         uv run python src/dogs_classification/link_model.py $MODEL_NAME --aliases production
 
-    - name: Auth with GCP
-      uses: google-github-actions/auth@v3
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
+    # - name: Auth with GCP
+    #   uses: google-github-actions/auth@v3
+    #   with:
+    #     credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Trigger deployment
-      run: |
-        gcloud builds submit --config cloud/cloudbuild_bentoml.yaml . --region europe-west4
+    # - name: Trigger deployment
+    #   run: |
+    #     gcloud builds submit --config cloud/cloudbuild_bentoml.yaml . --region europe-west4
