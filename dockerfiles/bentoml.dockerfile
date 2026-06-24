@@ -15,6 +15,7 @@ RUN mkdir -p models data/processed
 COPY data/processed/classes.json data/processed/classes.json
 
 COPY models/dog_classifier.onnx models/dog_classifier.onnx
+COPY models/dog_classifier.onnx.data models/dog_classifier.onnx.data
 
 RUN uv sync --frozen --extra-index-url https://download.pytorch.org/whl/cpu
 
