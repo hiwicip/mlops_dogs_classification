@@ -31,7 +31,7 @@ jobs:
       run: |
         echo "Model name: $MODEL_NAME"
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v4
 
     - name: Auth with GCP
       uses: google-github-actions/auth@v3
@@ -63,7 +63,7 @@ jobs:
       run: |
         echo "Model name: $MODEL_NAME"
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v4
 
     - name: Install uv
       uses: astral-sh/setup-uv@v7
@@ -76,7 +76,7 @@ jobs:
 
     - name: Add production alias
       run: |
-        uv run python src/dogs_classification/link_model.py $MODEL_NAME -a production
+        uv run python src/dogs_classification/link_model.py $MODEL_NAME --aliases production
 
     - name: Auth with GCP
       uses: google-github-actions/auth@v3
