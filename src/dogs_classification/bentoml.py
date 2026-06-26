@@ -80,6 +80,7 @@ class DogBreedClassificationService:
         predicted_class = self.idx_to_class[prediction]
         timestamp = datetime.now(UTC).isoformat()
 
+        # Save prediction and image to GCP bucket in a separate thread
         Thread(target=save_prediction, args=(timestamp, image.copy(), predicted_class, confidence), daemon=True).start()
 
         return {
