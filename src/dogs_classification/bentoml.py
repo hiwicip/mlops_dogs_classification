@@ -1,13 +1,49 @@
 import json
+from datetime import UTC, datetime
+from io import BytesIO
+from threading import Thread
 
 import bentoml
 import numpy as np
+from google.cloud import storage
 from onnxruntime import InferenceSession
 from PIL import Image
 from transformers import AutoImageProcessor
 
 MODEL_NAME = "google/vit-base-patch16-224"
 ONNX_MODEL_PATH = "models/dog_classifier.onnx"
+BUCKET_NAME = "mlops-dog-data-euwest4"
+PROJECT_ID = "mlopsdogclassification"
+
+
+def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, confidence: float):
+    try:
+        client = storage.Client(project=PROJECT_ID)
+        bucket = client.bucket(BUCKET_NAME)
+
+        image_buffer = BytesIO()
+        image.save(image_buffer, format="JPEG")
+        image_buffer.seek(0)
+
+        image_filename = f"input_images/{timestamp}.jpg"
+
+        bucket.blob(image_filename).upload_from_file(image_buffer, content_type="image/jpeg")
+
+        data = {
+            "timestamp": timestamp,
+            "predicted_class": predicted_class,
+            "confidence": confidence,
+            "image_path": image_filename,
+        }
+
+        filename = f"predictions/prediction_{timestamp}.json"
+        blob = bucket.blob(filename)
+        blob.upload_from_string(json.dumps(data))
+
+        print(f"Prediction saved to GCP bucket: {filename}")
+
+    except Exception as e:
+        print(f"Failed to save prediction: {e}")
 
 
 @bentoml.service
@@ -40,6 +76,12 @@ class DogBreedClassificationService:
         exp = np.exp(logits - np.max(logits, axis=1, keepdims=True))
         probs = exp / exp.sum(axis=1, keepdims=True)
         confidence = float(np.max(probs))
+
+        predicted_class = self.idx_to_class[prediction]
+        timestamp = datetime.now(UTC).isoformat()
+
+        Thread(target=save_prediction, args=(timestamp, image.copy(), predicted_class, confidence), daemon=True).start()
+
         return {
             "predicted_class": self.idx_to_class[prediction],
             "confidence": confidence,
