@@ -60,6 +60,14 @@ def main() -> None:
                 st.session_state["image_hash"] = current_hash
                 st.session_state.pop("prediction", None)
 
+        if "prediction" in st.session_state:
+            response = st.session_state["prediction"]
+            st.success(f"**Breed:** {response['predicted_class']}")
+            confidence = response["confidence"]
+            st.metric("Confidence", f"{confidence:.1%}")
+            st.progress(confidence)
+
+    with col_preview:
         if image_source is not None:
             if st.button("Classify", type="primary", use_container_width=True):
                 image_source.seek(0)
@@ -69,20 +77,12 @@ def main() -> None:
                             f"{BACKEND_URL}/predict", files={"image": image_source}, timeout=180
                         ).json()
                     st.session_state["prediction"] = response
+                    st.rerun()
                 except requests.exceptions.Timeout:
                     st.error("Request timed out. The service may be starting up — try again in a moment.")
                 except Exception as e:
                     st.error(f"Classification failed: {e}")
 
-            if "prediction" in st.session_state:
-                response = st.session_state["prediction"]
-                st.success(f"**Breed:** {response['predicted_class']}")
-                confidence = response["confidence"]
-                st.metric("Confidence", f"{confidence:.1%}")
-                st.progress(confidence)
-
-    with col_preview:
-        if image_source is not None:
             image = Image.open(image_source)
             st.image(image, use_container_width=True)
         else:
