@@ -43,23 +43,18 @@ jobs:
         run: |
           uv run dvc pull --no-run-cache
 
+      - name: Setup CML
+        uses: iterative/setup-cml@v3
+
       - name: Check data statistics
         run: |
           uv run python -m dogs_classification.dataset_statistics > report.md
 
-      - name: Upload plots as artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: label-distribution-plots
-          path: |
-            train_label_distribution.png
-            test_label_distribution.png
-            eval_label_distribution.png
-
-      - name: Post report as PR comment
+      - name: Publish plots and post report
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "" >> report.md
-          echo "**Label distribution plots** are available in the [workflow artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})." >> report.md
-          gh pr comment ${{ github.event.pull_request.number }} --body-file report.md
+          cml publish train_label_distribution.png --md >> report.md
+          cml publish test_label_distribution.png --md >> report.md
+          cml publish eval_label_distribution.png --md >> report.md
+          cml comment create report.md
