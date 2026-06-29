@@ -23,7 +23,7 @@ request_latency = Histogram("prediction_latency_seconds", "Prediction latency in
 image_size_summary = Summary("image_pixels", "Number of pixels in uploaded images")
 
 
-def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, confidence: float):
+def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, confidence: float, predictions: list):
     try:
         client = storage.Client(project=PROJECT_ID)
         bucket = client.bucket(BUCKET_NAME)
@@ -38,8 +38,11 @@ def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, co
 
         data = {
             "timestamp": timestamp,
+            # Top 1 (für drift report)
             "predicted_class": predicted_class,
             "confidence": confidence,
+            # Top 5
+            "predictions": predictions,
             "image_path": image_filename,
         }
 
@@ -79,27 +82,33 @@ class DogBreedClassificationService:
                 ort_inputs = {"pixel_values": inputs["pixel_values"].astype(np.float32)}
 
                 # Inference
-                logits = self.model.run(
-                    None,
-                    ort_inputs,
-                )[0]
+                logits = self.model.run(None, ort_inputs)[0]
                 prediction = int(np.argmax(logits, axis=1)[0])
+
                 # Softmax for confidence
                 exp = np.exp(logits - np.max(logits, axis=1, keepdims=True))
                 probs = exp / exp.sum(axis=1, keepdims=True)
                 confidence = float(np.max(probs))
 
                 predicted_class = self.idx_to_class[prediction]
+                # Top 5 predictions
+                probs = probs[0]
+                top5_indices = np.argsort(probs)[::-1][:5]
+                predictions = {f"class{i + 1}": self.idx_to_class[int(idx)] for i, idx in enumerate(top5_indices)}
+
+                predictions.update({f"confidence{i + 1}": float(probs[idx]) for i, idx in enumerate(top5_indices)})
+
                 timestamp = datetime.now(UTC).isoformat()
 
                 # Save prediction and image to GCP bucket in a separate thread
                 Thread(
-                    target=save_prediction, args=(timestamp, image.copy(), predicted_class, confidence), daemon=True
+                    target=save_prediction,
+                    args=(timestamp, image.copy(), predicted_class, confidence, predictions),
+                    daemon=True,
                 ).start()
 
                 return {
-                    "predicted_class": self.idx_to_class[prediction],
-                    "confidence": confidence,
+                    "predictions": predictions,
                 }
         except Exception:
             error_counter.inc()
