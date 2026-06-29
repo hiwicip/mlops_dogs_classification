@@ -12,7 +12,16 @@ BASE_URL = os.environ.get("BENTOML_URL", "https://dogs-bentoml-288634047169.euro
 
 @pytest.fixture(scope="module")
 def client():
-    with httpx.Client(base_url=BASE_URL, timeout=30) as c:
+    with httpx.Client(base_url=BASE_URL, timeout=120) as c:
+        # warm up: Cloud Run may be cold-starting, retry for up to 3 minutes
+        for attempt in range(9):
+            try:
+                r = c.get("/livez")
+                if r.status_code == 200:
+                    break
+            except httpx.TransportError:
+                if attempt == 8:
+                    raise
         yield c
 
 
