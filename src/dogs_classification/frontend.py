@@ -1,5 +1,7 @@
 import os
 
+import altair as alt
+import pandas as pd
 import requests
 import streamlit as st
 from google.cloud import run_v2
@@ -60,29 +62,57 @@ def main() -> None:
                 st.session_state["image_hash"] = current_hash
                 st.session_state.pop("prediction", None)
 
+        if "prediction" in st.session_state:
+            response = st.session_state["prediction"]["predictions"]
+            top_breed = response["class1"].replace("_", " ").title()
+            top_conf = response["confidence1"]
+            st.success(f"🥇 **Top Prediction: {top_breed}** &nbsp;&nbsp; {top_conf:.1%}")
+
+            breeds = [response[f"class{i}"].replace("_", " ").title() for i in range(1, 6)]
+            confidences = [response[f"confidence{i}"] for i in range(1, 6)]
+
+            chart_df = pd.DataFrame(
+                {
+                    "Breed": breeds,
+                    "Confidence (%)": [c * 100 for c in confidences],
+                    "is_top": [i == 0 for i in range(len(breeds))],
+                }
+            )
+            chart = (
+                alt.Chart(chart_df)
+                .mark_bar()
+                .encode(
+                    x=alt.X(
+                        "Confidence (%):Q",
+                        scale=alt.Scale(domain=[0, 100]),
+                        axis=alt.Axis(format=".0f", tickCount=10),
+                    ),
+                    y=alt.Y("Breed:N", sort="-x"),
+                    color=alt.Color(
+                        "is_top:N",
+                        scale=alt.Scale(domain=[False, True], range=["#0d6e30", "#21c354"]),
+                        legend=None,
+                    ),
+                )
+            )
+            st.altair_chart(chart, use_container_width=True)
+
+    with col_preview:
         if image_source is not None:
             if st.button("Classify", type="primary", use_container_width=True):
                 image_source.seek(0)
                 try:
-                    with st.spinner("Classifying... (first request may take up to 2 minutes on cold start)"):
+                    with st.spinner("Classifying..."):
                         response = requests.post(
                             f"{BACKEND_URL}/predict", files={"image": image_source}, timeout=180
                         ).json()
                     st.session_state["prediction"] = response
+                    st.rerun()
                 except requests.exceptions.Timeout:
                     st.error("Request timed out. The service may be starting up — try again in a moment.")
                 except Exception as e:
                     st.error(f"Classification failed: {e}")
 
-            if "prediction" in st.session_state:
-                response = st.session_state["prediction"]
-                st.success(f"**Breed:** {response['predicted_class']}")
-                confidence = response["confidence"]
-                st.metric("Confidence", f"{confidence:.1%}")
-                st.progress(confidence)
-
-    with col_preview:
-        if image_source is not None:
             image = Image.open(image_source)
             st.image(image, use_container_width=True)
         else:
