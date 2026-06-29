@@ -39,17 +39,20 @@ def test_predict_response_status(client):
 def test_predict_response_schema(client):
     with open(TEST_IMAGE, "rb") as f:
         response = client.post("/predict", files={"image": ("dog.jpg", f, "image/jpeg")})
-    body = response.json()
-    assert set(body.keys()) == {"predicted_class", "confidence"}
+    predictions = response.json()["predictions"]
+    assert all(f"class{i}" in predictions for i in range(1, 6))
+    assert all(f"confidence{i}" in predictions for i in range(1, 6))
 
 
 def test_predict_confidence_in_range(client):
     with open(TEST_IMAGE, "rb") as f:
         response = client.post("/predict", files={"image": ("dog.jpg", f, "image/jpeg")})
-    assert 0.0 <= response.json()["confidence"] <= 1.0
+    predictions = response.json()["predictions"]
+    assert all(0.0 <= predictions[f"confidence{i}"] <= 1.0 for i in range(1, 6))
 
 
 def test_predict_class_is_string(client):
     with open(TEST_IMAGE, "rb") as f:
         response = client.post("/predict", files={"image": ("dog.jpg", f, "image/jpeg")})
-    assert isinstance(response.json()["predicted_class"], str)
+    predictions = response.json()["predictions"]
+    assert all(isinstance(predictions[f"class{i}"], str) for i in range(1, 6))
