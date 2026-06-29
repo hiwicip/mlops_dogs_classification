@@ -7,9 +7,7 @@ import pytest
 TESTS_DIR = Path(__file__).parent
 TEST_IMAGE = TESTS_DIR / "data" / "n02097130_4518.jpg"
 
-BASE_URL = os.environ.get(
-    "BENTOML_URL", "https://dogs-bentoml-288634047169.europe-west4.run.app"
-)
+BASE_URL = os.environ.get("BENTOML_URL", "https://dogs-bentoml-288634047169.europe-west4.run.app")
 
 
 @pytest.fixture(scope="module")
