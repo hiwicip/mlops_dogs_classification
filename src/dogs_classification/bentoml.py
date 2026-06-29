@@ -8,12 +8,19 @@ import numpy as np
 from google.cloud import storage
 from onnxruntime import InferenceSession
 from PIL import Image
+from prometheus_client import Counter, Histogram, Summary
 from transformers import AutoImageProcessor
 
 MODEL_NAME = "google/vit-base-patch16-224"
 ONNX_MODEL_PATH = "models/dog_classifier.onnx"
 BUCKET_NAME = "mlops-dog-data-euwest4"
 PROJECT_ID = "mlopsdogclassification"
+
+# Define Prometheus metrics
+error_counter = Counter("prediction_error", "Number of prediction errors")
+request_counter = Counter("prediction_requests", "Number of prediction requests")
+request_latency = Histogram("prediction_latency_seconds", "Prediction latency in seconds")
+image_size_summary = Summary("image_pixels", "Number of pixels in uploaded images")
 
 
 def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, confidence: float):
@@ -59,31 +66,41 @@ class DogBreedClassificationService:
 
     @bentoml.api
     def predict(self, image: Image.Image) -> dict:
-        # Preprocess input
-        image = image.convert("RGB")
-        image_np = np.array(image)
-        inputs = self.processor(images=image_np, return_tensors="np")
+        request_counter.inc()
+        image_size_summary.observe(image.width * image.height)
 
-        ort_inputs = {"pixel_values": inputs["pixel_values"].astype(np.float32)}
+        try:
+            with request_latency.time():
+                # Preprocess input
+                image = image.convert("RGB")
+                image_np = np.array(image)
+                inputs = self.processor(images=image_np, return_tensors="np")
 
-        # Inference
-        logits = self.model.run(
-            None,
-            ort_inputs,
-        )[0]
-        prediction = int(np.argmax(logits, axis=1)[0])
-        # Softmax for confidence
-        exp = np.exp(logits - np.max(logits, axis=1, keepdims=True))
-        probs = exp / exp.sum(axis=1, keepdims=True)
-        confidence = float(np.max(probs))
+                ort_inputs = {"pixel_values": inputs["pixel_values"].astype(np.float32)}
 
-        predicted_class = self.idx_to_class[prediction]
-        timestamp = datetime.now(UTC).isoformat()
+                # Inference
+                logits = self.model.run(
+                    None,
+                    ort_inputs,
+                )[0]
+                prediction = int(np.argmax(logits, axis=1)[0])
+                # Softmax for confidence
+                exp = np.exp(logits - np.max(logits, axis=1, keepdims=True))
+                probs = exp / exp.sum(axis=1, keepdims=True)
+                confidence = float(np.max(probs))
 
-        # Save prediction and image to GCP bucket in a separate thread
-        Thread(target=save_prediction, args=(timestamp, image.copy(), predicted_class, confidence), daemon=True).start()
+                predicted_class = self.idx_to_class[prediction]
+                timestamp = datetime.now(UTC).isoformat()
 
-        return {
-            "predicted_class": self.idx_to_class[prediction],
-            "confidence": confidence,
-        }
+                # Save prediction and image to GCP bucket in a separate thread
+                Thread(
+                    target=save_prediction, args=(timestamp, image.copy(), predicted_class, confidence), daemon=True
+                ).start()
+
+                return {
+                    "predicted_class": self.idx_to_class[prediction],
+                    "confidence": confidence,
+                }
+        except Exception:
+            error_counter.inc()
+            raise

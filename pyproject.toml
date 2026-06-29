@@ -47,6 +47,7 @@ dependencies = [
     "bentoml>=1.4.39",
     "onnxruntime>=1.27.0",
     "evidently>=0.7.21",
+    "prometheus-client>=0.25.0",
 ]
 
 [dependency-groups]
