@@ -114,3 +114,11 @@ mypy_path = "src"
 [[tool.mypy.overrides]]
 module = "wandb"
 follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "google.cloud"
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "google.cloud.*"
+follow_imports = "skip"
