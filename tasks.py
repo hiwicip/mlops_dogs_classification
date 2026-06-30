@@ -109,6 +109,12 @@ def bentoml(ctx: Context) -> None:
 
 
 @task
+def data_drift(ctx: Context) -> None:
+    """Run data drift detection."""
+    ctx.run("uv run src/dogs_classification/data_drift.py", echo=True, pty=not WINDOWS)
+
+
+@task
 # Documentation commands
 @task
 def build_docs(ctx: Context) -> None:
