@@ -73,21 +73,21 @@ def test(ctx: Context) -> None:
 def docker_build(
     ctx: Context,
     image_name: str,
-    dockerfile: str = "dockerfiles/train.dockerfile",
+    dockerfile: str,
     progress: str = "plain",
     platform: str = "linux/amd64",
     device: str = "cpu",
     push: bool = False,
 ) -> None:
     """Build docker image."""
-    tag = image_name
     command = (
         f"docker build"
         f" --platform {platform}"
-        f" -t {tag}"
+        f" -f {dockerfile}"
+        f" -t {image_name}"
         f" --build-arg DEVICE={device}"
-        f" . -f {dockerfile}"
         f" --progress={progress}"
+        f" ."
     )
     if push:
         command += " --push"
