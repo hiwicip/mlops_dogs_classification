@@ -56,7 +56,7 @@ def evaluate(
 ) -> None:
     """Evaluate model."""
     ctx.run(
-        f"uv run src/{PROJECT_NAME}/evaluate.py " f"--config-path {config_path} " f"--config-name {config_name}",
+        f"uv run src/{PROJECT_NAME}/evaluate.py --config-path {config_path} --config-name {config_name}",
         echo=True,
         pty=not WINDOWS,
     )
@@ -106,6 +106,9 @@ def bentoml(ctx: Context) -> None:
     ctx.run(
         "uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService", echo=True, pty=not WINDOWS
     )
+    if push:
+        command += " --push"
+    ctx.run(command, echo=True, pty=not WINDOWS)
 
 
 @task

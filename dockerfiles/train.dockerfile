@@ -5,6 +5,7 @@ FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04 AS base
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 ARG DEVICE
+ENV UV_PYTHON=3.13
 ENV UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/${DEVICE}
 
 WORKDIR /app
