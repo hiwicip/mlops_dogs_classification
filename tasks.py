@@ -102,7 +102,7 @@ def docker_run(ctx: Context, image: str) -> None:
 
 @task
 def bentoml(ctx: Context) -> None:
-    """Export model to BentoML."""
+    """Run bentoml service."""
     ctx.run(
         "uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService", echo=True, pty=not WINDOWS
     )
@@ -114,7 +114,6 @@ def data_drift(ctx: Context) -> None:
     ctx.run("uv run src/dogs_classification/data_drift.py", echo=True, pty=not WINDOWS)
 
 
-@task
 # Documentation commands
 @task
 def build_docs(ctx: Context) -> None:
