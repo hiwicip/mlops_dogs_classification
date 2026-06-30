@@ -47,7 +47,10 @@ dependencies = [
     "bentoml>=1.4.39",
     "onnxruntime>=1.27.0",
     "evidently>=0.7.21",
+    "streamlit>=1.58.0",
+    "google-cloud-run>=0.16.1",
     "prometheus-client>=0.25.0",
+    "google-cloud-storage>=2.0.0",
 ]
 
 [dependency-groups]
@@ -110,4 +113,12 @@ mypy_path = "src"
 
 [[tool.mypy.overrides]]
 module = "wandb"
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "google.cloud"
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "google.cloud.*"
 follow_imports = "skip"

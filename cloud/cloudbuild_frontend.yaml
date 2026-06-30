@@ -1,0 +1,29 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build frontend image'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-frontend:latest',
+    '-f',
+    'dockerfiles/frontend.dockerfile'
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push frontend image'
+  args: [
+    'push',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-frontend:latest'
+  ]
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy to Cloud Run'
+  args: [
+    'gcloud', 'run', 'deploy', 'dogs-frontend',
+    '--image', 'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-frontend:latest',
+    '--region', 'europe-west4',
+    '--project', 'mlopsdogclassification',
+    '--platform', 'managed',
+    '--port', '8501'
+  ]
+options:
+  logging: CLOUD_LOGGING_ONLY
