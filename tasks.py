@@ -102,13 +102,10 @@ def docker_run(ctx: Context, image: str) -> None:
 
 @task
 def bentoml(ctx: Context) -> None:
-    """Run bentoml service."""
+    """Export model to BentoML."""
     ctx.run(
         "uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService", echo=True, pty=not WINDOWS
     )
-    if push:
-        command += " --push"
-    ctx.run(command, echo=True, pty=not WINDOWS)
 
 
 @task
