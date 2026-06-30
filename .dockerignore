@@ -4,6 +4,8 @@ data/processed/
 !data/processed.dvc
 .dvc/cache
 models/
+!models/dog_classifier.onnx
+!models/dog_classifier.onnx.data
 outputs/
 secrets/
 .venv/

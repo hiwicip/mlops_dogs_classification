@@ -159,6 +159,9 @@ venv.bak/
 # GSC Secrets
 secrets/
 
+# Steamlit Secrets
+.streamlit/
+
 # Spyder project settings
 .spyderproject
 .spyproject
