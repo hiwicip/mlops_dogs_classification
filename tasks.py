@@ -109,6 +109,12 @@ def bentoml(ctx: Context) -> None:
 
 
 @task
+def frontend(ctx: Context) -> None:
+    """Run frontend."""
+    ctx.run("uv run streamlit run src/dogs_classification/frontend.py", echo=True, pty=not WINDOWS)
+
+
+@task
 def data_drift(ctx: Context) -> None:
     """Run data drift detection."""
     ctx.run("uv run src/dogs_classification/data_drift.py", echo=True, pty=not WINDOWS)
