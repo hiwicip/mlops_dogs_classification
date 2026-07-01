@@ -1,0 +1,35 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: dogs-bentoml
+  annotations:
+    run.googleapis.com/launch-stage: ALPHA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/container-dependencies: '{"collector":["app"]}'
+        run.googleapis.com/secrets: 'dogs-bentoml-monitoring-config:projects/mlopsdogclassification/secrets/dogs-bentoml-monitoring-config'
+    spec:
+      serviceAccountName: dogs-deployment-monitoring@mlopsdogclassification.iam.gserviceaccount.com
+      containers:
+      - name: app
+        image: europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            memory: 4Gi
+      - name: collector
+        image: us-docker.pkg.dev/cloud-ops-agents-artifacts/cloud-run-gmp-sidecar/cloud-run-gmp-sidecar:1.2.0
+        volumeMounts:
+        - mountPath: /etc/rungmp/
+          name: config
+      volumes:
+      - name: config
+        secret:
+          secretName: dogs-bentoml-monitoring-config
+          items:
+          - key: latest
+            path: config.yaml
