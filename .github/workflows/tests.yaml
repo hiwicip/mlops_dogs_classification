@@ -33,5 +33,7 @@ jobs:
           uv sync --locked --dev
 
       - name: Run tests
+        env:
+          DISABLE_PREDICTION_LOGGING: "true"
         run: |
           uv run coverage run -m pytest tests/ -v --ignore=tests/performancetests

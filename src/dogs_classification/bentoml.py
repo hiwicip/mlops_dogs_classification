@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import UTC, datetime
 from io import BytesIO
 from threading import Thread
@@ -15,6 +16,8 @@ MODEL_NAME = "google/vit-base-patch16-224"
 ONNX_MODEL_PATH = "models/dog_classifier.onnx"
 BUCKET_NAME = "mlops-dog-data-euwest4"
 PROJECT_ID = "mlopsdogclassification"
+
+SAVE_PREDICTIONS = os.getenv("DISABLE_PREDICTION_LOGGING") != "true"
 
 # Define Prometheus metrics
 error_counter = Counter("prediction_error", "Number of prediction errors")
@@ -101,11 +104,12 @@ class DogBreedClassificationService:
                 timestamp = datetime.now(UTC).isoformat()
 
                 # Save prediction and image to GCP bucket in a separate thread
-                Thread(
-                    target=save_prediction,
-                    args=(timestamp, image.copy(), predicted_class, confidence, predictions),
-                    daemon=True,
-                ).start()
+                if SAVE_PREDICTIONS:
+                    Thread(
+                        target=save_prediction,
+                        args=(timestamp, image.copy(), predicted_class, confidence, predictions),
+                        daemon=True,
+                    ).start()
 
                 return {
                     "predictions": predictions,
