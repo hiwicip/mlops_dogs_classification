@@ -70,9 +70,12 @@ class DogBreedClassificationService:
         self.idx_to_class = {idx: name for name, idx in label2id.items()}
 
     @bentoml.api
-    def predict(self, image: Image.Image) -> dict:
+    def predict(self, image: Image.Image, ctx: bentoml.Context) -> dict:
         request_counter.inc()
         image_size_summary.observe(image.width * image.height)
+
+        request = ctx.request
+        is_test = request.headers.get("X-Test-Request") == "true"
 
         try:
             with request_latency.time():
@@ -102,12 +105,12 @@ class DogBreedClassificationService:
 
                 timestamp = datetime.now(UTC).isoformat()
 
-                # Save prediction and image to GCP bucket in a separate thread
-                Thread(
-                    target=save_prediction,
-                    args=(timestamp, image.copy(), predicted_class, confidence, predictions),
-                    daemon=True,
-                ).start()
+                if not is_test:
+                    Thread(
+                        target=save_prediction,
+                        args=(timestamp, image.copy(), predicted_class, confidence, predictions),
+                        daemon=True,
+                    ).start()
 
                 return {
                     "predictions": predictions,
