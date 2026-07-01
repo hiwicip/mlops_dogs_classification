@@ -21,6 +21,7 @@ error_counter = Counter("prediction_error", "Number of prediction errors")
 request_counter = Counter("prediction_requests", "Number of prediction requests")
 request_latency = Histogram("prediction_latency_seconds", "Prediction latency in seconds")
 image_size_summary = Summary("image_pixels", "Number of pixels in uploaded images")
+gcs_upload_error_counter = Counter("gcs_upload_error", "Number of failed prediction uploads to GCS")
 
 
 def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, confidence: float, predictions: list):
@@ -53,6 +54,7 @@ def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, co
         print(f"Prediction saved to GCP bucket: {filename}")
 
     except Exception as e:
+        gcs_upload_error_counter.inc()
         print(f"Failed to save prediction: {e}")
 
 
