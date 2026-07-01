@@ -32,7 +32,7 @@ dependencies = [
     "torchvision>=0.21.0",
     "tqdm>=4.68.2",
     "transformers>=5.10.1",
-    "typer==0.26.7",
+    "typer==0.26.8",
     "typing>=3.10.0.0",
     "uvicorn==0.49.0",
     "torch-tb-profiler>=0.4.3",
