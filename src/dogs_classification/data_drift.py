@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 from evidently import Report
-from evidently.presets import DataDriftPreset
+from evidently.presets import DataDriftPreset, DataSummaryPreset
 from google.cloud import storage
 from PIL import Image
 from transformers import AutoImageProcessor
@@ -39,17 +39,29 @@ def download_predictions_from_gcs(bucket_name: str, prefix: str) -> pd.DataFrame
     blobs = list(bucket.list_blobs(prefix=prefix))
 
     rows = []
+
     for blob in blobs:
-        if blob.name.endswith(".json"):
-            content = blob.download_as_string()
-            data = json.loads(content)
-            rows.append(
-                {
-                    "image_path": data["image_path"],
-                    "predicted_class": data["predicted_class"],
-                    "confidence": data["confidence"],
-                }
-            )
+        if not blob.name.endswith(".json"):
+            continue
+
+        content = blob.download_as_string()
+        data = json.loads(content)
+
+        image_path = data["image_path"]
+
+        # Prüfen, ob das referenzierte Bild existiert
+        image_blob = bucket.blob(image_path)
+        if not image_blob.exists(client):
+            print(f"Skipping prediction because image is missing: {image_path}")
+            continue
+
+        rows.append(
+            {
+                "image_path": image_path,
+                "predicted_class": data["predicted_class"],
+                "confidence": data["confidence"],
+            }
+        )
 
     return pd.DataFrame(rows)
 
@@ -135,7 +147,7 @@ def main() -> None:
     reference_df = pd.DataFrame(reference_features, columns=["brightness", "contrast", "sharpness"])
     current_df = pd.DataFrame(current_features, columns=["brightness", "contrast", "sharpness"])
 
-    report = Report(metrics=[DataDriftPreset()])
+    report = Report(metrics=[DataDriftPreset(), DataSummaryPreset()])
     eval = report.run(reference_data=reference_df, current_data=current_df)
 
     # reference_embeddings = get_vit_embeddings(reference_pixel_values)
