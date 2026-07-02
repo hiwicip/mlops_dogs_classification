@@ -10,6 +10,7 @@ import torch
 from evidently import Report
 from evidently.presets import DataDriftPreset, DataSummaryPreset
 from google.cloud import storage
+from onnxruntime import InferenceSession
 from PIL import Image
 from transformers import AutoImageProcessor
 
@@ -18,12 +19,12 @@ PREDICTIONS_PREFIX = "predictions/"
 REPORT_OUTPUT_PATH = "drift_reports/drift_report_{timestamp}.html"
 METADATA_PATH = Path("data/processed/metadata.csv")
 CLASSES_FILE = Path("data/processed/classes.json")
+ONNX_MODEL_PATH = Path("models/dog_classifier.onnx")
 
 SAMPLES_PER_CLASS = 5
 
 processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224")
-# model = DogModel(model_name="google/vit-base-patch16-224")
-# model.eval()
+model = InferenceSession(ONNX_MODEL_PATH)
 
 
 # def get_vit_embeddings(pixel_values: torch.Tensor):
@@ -101,6 +102,22 @@ def extract_features(pixel_values):
     return np.array(features)
 
 
+def compute_confidence(model, pixel_values: np.ndarray) -> np.ndarray:
+    confidences = []
+
+    for x in pixel_values:
+        x = x[None, ...].astype(np.float32)  # (1, C, H, W)
+
+        logits = model.run(None, {"pixel_values": x})[0]
+
+        exp = np.exp(logits - np.max(logits, axis=1, keepdims=True))
+        probs = exp / np.sum(exp, axis=1, keepdims=True)
+
+        confidences.append(float(np.max(probs)))
+
+    return np.array(confidences)
+
+
 def upload_report_to_gcs(local_path: str, bucket_name: str, destination_path: str) -> None:
     client = storage.Client()
     bucket = client.bucket(bucket_name)
@@ -144,8 +161,22 @@ def main() -> None:
     reference_features = extract_features(reference_pixel_values)
     current_features = extract_features(current_pixel_values)
 
-    reference_df = pd.DataFrame(reference_features, columns=["brightness", "contrast", "sharpness"])
-    current_df = pd.DataFrame(current_features, columns=["brightness", "contrast", "sharpness"])
+    feature_names = ["brightness", "contrast", "sharpness"]
+
+    reference_df[feature_names] = reference_features
+    current_df[feature_names] = current_features
+
+    # Compute confidence for reference data
+    reference_confidence = compute_confidence(model, reference_pixel_values.numpy())
+    reference_df["confidence"] = reference_confidence
+
+    # only keep the relevant columns for the drift report
+    reference_df = reference_df[["label", "confidence", *feature_names]]
+    current_df = current_df[["label", "confidence", *feature_names]]
+
+    # change label column to categorical for the drift report
+    reference_df["label"] = reference_df["label"].astype("category")
+    current_df["label"] = current_df["label"].astype("category")
 
     report = Report(metrics=[DataDriftPreset(), DataSummaryPreset()])
     eval = report.run(reference_data=reference_df, current_data=current_df)
