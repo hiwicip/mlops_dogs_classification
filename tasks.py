@@ -101,6 +101,12 @@ def docker_run(ctx: Context, image: str) -> None:
 
 
 @task
+def create_onnx(ctx: Context) -> None:
+    """Create ONNX model."""
+    ctx.run("uv run src/dogs_classification/create_onnx.py", echo=True, pty=not WINDOWS)
+
+
+@task
 def bentoml(ctx: Context) -> None:
     """Export model to BentoML."""
     ctx.run(
