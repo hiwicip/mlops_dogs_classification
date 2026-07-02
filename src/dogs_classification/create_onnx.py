@@ -30,6 +30,17 @@ print(f"Downloaded {blob.name} -> {local_path}")
 model = DogModel(model_name=MODEL_NAME)
 state_dict = torch.load(local_path, map_location="cpu")
 model.load_state_dict(state_dict)
+
+
+# Pruning
+def simple_prune(module, amount=0.2):
+    with torch.no_grad():
+        for name, param in module.named_parameters():
+            if "weight" in name and param.dim() > 1:
+                mask = param.abs() > param.abs().mean() * amount
+                param.mul_(mask)
+
+
 model.eval()
 
 processor = AutoImageProcessor.from_pretrained(MODEL_NAME)
@@ -49,11 +60,7 @@ torch.onnx.export(
     str(onnx_path),
     input_names=["pixel_values"],
     output_names=["logits"],
-    dynamic_axes={
-        "pixel_values": {0: "batch_size"},
-        "logits": {0: "batch_size"},
-    },
-    opset_version=17,
+    opset_version=18,
 )
 
 print(f"Model exported to {onnx_path}")
