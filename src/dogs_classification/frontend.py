@@ -55,6 +55,9 @@ def main() -> None:
 
         image_source = uploaded_file or camera_photo
 
+        # disclaimer that images will be saved
+        st.info("⚠️ Disclaimer: Uploaded images will be saved for monitoring. ")
+
         # Clear stale prediction when a new image is loaded
         if image_source is not None:
             current_hash = hash(image_source.getvalue())
