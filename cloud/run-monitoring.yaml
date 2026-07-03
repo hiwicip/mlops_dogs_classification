@@ -1,0 +1,9 @@
+apiVersion: monitoring.googleapis.com/v1beta
+kind: RunMonitoring
+metadata:
+  name: dogs-bentoml-monitoring
+spec:
+  endpoints:
+  - port: 3000
+    path: /metrics
+    interval: 30s

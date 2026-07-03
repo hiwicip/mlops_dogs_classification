@@ -20,15 +20,18 @@ steps:
     'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest'
   ]
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Update monitoring config secret'
+  args: [
+    'gcloud', 'secrets', 'versions', 'add', 'dogs-bentoml-monitoring-config',
+    '--data-file', 'cloud/run-monitoring.yaml',
+    '--project', 'mlopsdogclassification'
+  ]
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   id: 'Deploy to Cloud Run'
   args: [
-    'gcloud', 'run', 'deploy', 'dogs-bentoml',
-    '--image', 'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest',
+    'gcloud', 'run', 'services', 'replace', 'cloud/run-service.yaml',
     '--region', 'europe-west4',
-    '--project', 'mlopsdogclassification',
-    '--platform', 'managed',
-    '--port', '3000',
-    '--memory', '4Gi'
+    '--project', 'mlopsdogclassification'
   ]
 options:
   logging: CLOUD_LOGGING_ONLY
