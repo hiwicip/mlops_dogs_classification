@@ -45,7 +45,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --locked --dev
+        uv sync --locked --dev --extra train
 
     - name: Test model
       run: |
@@ -73,7 +73,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --locked --dev
+        uv sync --locked --dev --extra train
 
     - name: Add production alias
       run: |
