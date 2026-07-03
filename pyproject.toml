@@ -48,6 +48,7 @@ serve = [
     "python-multipart>=0.0.32",
     "httpx>=0.28.1",
     "prometheus-client>=0.25.0",
+    "google-cloud-storage>=2.0.0",
 ]
 frontend = [
     "streamlit>=1.58.0",
