@@ -5,7 +5,7 @@ WORKDIR /app
 COPY uv.lock uv.lock
 COPY pyproject.toml pyproject.toml
 
-RUN uv sync --frozen --no-install-project --extra-index-url https://download.pytorch.org/whl/cpu
+RUN uv sync --frozen --no-install-project --extra serve --extra-index-url https://download.pytorch.org/whl/cpu
 
 COPY src src/
 COPY data/processed/classes.json data/processed/classes.json
@@ -14,7 +14,7 @@ COPY LICENSE LICENSE
 
 RUN mkdir -p models
 
-RUN uv sync --frozen --extra-index-url https://download.pytorch.org/whl/cpu
+RUN uv sync --frozen --extra serve --extra-index-url https://download.pytorch.org/whl/cpu
 
 EXPOSE $PORT
 

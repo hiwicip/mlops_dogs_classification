@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --locked --dev
+          uv sync --locked --dev --extra train
 
       - name: Run tests
         run: |
