@@ -1036,6 +1036,7 @@ serve = [
     { name = "uvicorn" },
 ]
 train = [
+    { name = "google-cloud-storage" },
     { name = "hydra-core" },
     { name = "kagglehub" },
     { name = "matplotlib" },
@@ -1076,6 +1077,7 @@ requires-dist = [
     { name = "google-cloud-run", marker = "extra == 'frontend'", specifier = ">=0.16.1" },
     { name = "google-cloud-storage", marker = "extra == 'cloud'", specifier = ">=2.0.0" },
     { name = "google-cloud-storage", marker = "extra == 'serve'", specifier = ">=2.0.0" },
+    { name = "google-cloud-storage", marker = "extra == 'train'", specifier = ">=2.0.0" },
     { name = "httpx", marker = "extra == 'serve'", specifier = ">=0.28.1" },
     { name = "hydra-core", marker = "extra == 'train'", specifier = ">=1.3.3" },
     { name = "kagglehub", marker = "extra == 'train'", specifier = ">=1.0.1" },

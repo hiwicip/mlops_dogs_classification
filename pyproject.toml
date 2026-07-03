@@ -38,6 +38,7 @@ train = [
     "scikit-learn>=1.8.0",
     "tqdm>=4.68.2",
     "matplotlib>=3.11.0",
+    "google-cloud-storage>=2.0.0",
     "onnx>=1.22.0",
     "onnxscript>=0.7.0",
 ]
