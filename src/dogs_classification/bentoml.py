@@ -25,6 +25,17 @@ gcs_upload_error_counter = Counter("gcs_upload_error", "Number of failed predict
 
 
 def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, confidence: float, predictions: list):
+    """
+    Save the prediction results to Google Cloud Storage (GCS) as a JSON file.
+    Args:
+        timestamp (str): The timestamp of the prediction.
+        image (Image.Image): The input image.
+        predicted_class (str): The predicted class label.
+        confidence (float): The confidence score of the prediction.
+        predictions (list): The top 5 predictions with their confidence scores.
+    Returns:
+        None
+    """
     try:
         client = storage.Client(project=PROJECT_ID)
         bucket = client.bucket(BUCKET_NAME)

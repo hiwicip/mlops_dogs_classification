@@ -13,6 +13,13 @@ BUCKET_NAME = "mlops-dog-data-euwest4"
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="config.yaml")
 def evaluate(cfg: DictConfig):
+    """
+    Evaluate the dog classification model on the test set.
+    Args:
+        cfg (DictConfig): The configuration object containing evaluation parameters.
+    Returns:
+        None
+    """
     model = DogModel(model_name=cfg.model.name, batch_size=cfg.training.batch_size)
     model.load_state_dict(torch.load("models/best_model.pt", map_location=DEVICE))
 

@@ -41,6 +41,8 @@ def simple_prune(module, amount=0.2):
                 param.mul_(mask)
 
 
+simple_prune(model, amount=0.2)
+
 model.eval()
 
 processor = AutoImageProcessor.from_pretrained(MODEL_NAME)
