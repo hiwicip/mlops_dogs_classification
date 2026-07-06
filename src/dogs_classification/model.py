@@ -104,13 +104,15 @@ class DogModel(LightningModule):
     def on_validation_epoch_end(self):
         all_preds = np.concatenate([o["preds"] for o in self.val_outputs])
         all_targets = np.concatenate([o["targets"] for o in self.val_outputs])
-        log_visualizations(all_preds, all_targets, self.id2label, self.logger.experiment)
+        if self.logger is not None:
+            log_visualizations(all_preds, all_targets, self.id2label, self.logger.experiment)
         self.val_outputs.clear()
 
     def on_test_epoch_end(self):
         all_preds = np.concatenate([o["preds"] for o in self.test_outputs])
         all_targets = np.concatenate([o["targets"] for o in self.test_outputs])
-        log_visualizations(all_preds, all_targets, self.id2label, self.logger.experiment)
+        if self.logger is not None:
+            log_visualizations(all_preds, all_targets, self.id2label, self.logger.experiment)
         self.test_outputs.clear()
 
         correct_per_class: dict[int, int] = defaultdict(int)
@@ -123,10 +125,11 @@ class DogModel(LightningModule):
 
         class_accuracy = {int(cls): correct_per_class[cls] / total_per_class[cls] for cls in total_per_class}
 
-        table = wandb.Table(columns=["class", "accuracy"])
-        for cls, acc in class_accuracy.items():
-            table.add_data(cls, acc)
-        self.logger.experiment.log({"class_accuracy": table})
+        if self.logger is not None:
+            table = wandb.Table(columns=["class", "accuracy"])
+            for cls, acc in class_accuracy.items():
+                table.add_data(cls, acc)
+            self.logger.experiment.log({"class_accuracy": table})
 
         output_dir = Path(self.test_out_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -160,7 +163,7 @@ class DogModel(LightningModule):
                 labels = batch["labels"].to(self.device)
                 correct += (preds == labels).sum().item()
                 total += labels.size(0)
-        return correct / total
+        return correct / total if total > 0 else 0.0
 
     def forward(self, pixel_values):
         return self.model(pixel_values).logits
