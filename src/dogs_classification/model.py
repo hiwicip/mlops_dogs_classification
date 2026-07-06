@@ -149,6 +149,19 @@ class DogModel(LightningModule):
         test_dataset = DogDataset(Path("data/processed/metadata.csv"), "eval")
         return torch.utils.data.DataLoader(test_dataset, self.batch_size, shuffle=False)
 
+    def evaluate(self, dataloader):
+        self.eval()
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for batch in dataloader:
+                logits = self(batch["pixel_values"].to(self.device))
+                preds = logits.argmax(dim=1)
+                labels = batch["labels"].to(self.device)
+                correct += (preds == labels).sum().item()
+                total += labels.size(0)
+        return correct / total
+
     def forward(self, pixel_values):
         return self.model(pixel_values).logits
 
