@@ -1,9 +1,12 @@
 import os
 import time
+from pathlib import Path
 
 import torch
 import wandb
+from torch.utils.data import DataLoader
 
+from src.dogs_classification.data import DogDataset
 from src.dogs_classification.model import DogModel
 
 LOGDIR = "logs/performance"
@@ -33,3 +36,11 @@ def test_model_speed():
             model.model(torch.rand(1, 3, 224, 224))
     end = time.time()
     assert end - start < 100
+
+
+def test_model_accuracy():
+    model = load_model(os.getenv("MODEL_NAME"))
+    dataset = DogDataset(Path("data/processed/metadata.csv"), split="test")
+    loader = DataLoader(dataset, batch_size=32, shuffle=False)
+    acc = model.evaluate(loader)
+    assert acc > 0.75
