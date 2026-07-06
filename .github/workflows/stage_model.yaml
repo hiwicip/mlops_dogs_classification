@@ -49,7 +49,7 @@ jobs:
 
     - name: Pull dataset with DVC
       run: |
-        uv run dvc pull -r remote_storage
+        uv run dvc pull -r remote_storage --force
 
     - name: Test model
       run: |
