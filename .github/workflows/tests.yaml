@@ -34,4 +34,4 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run coverage run -m pytest tests/ -v --ignore=tests/performancetests
+          uv run coverage run -m pytest tests/ -v
