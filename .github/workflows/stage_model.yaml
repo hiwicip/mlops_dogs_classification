@@ -49,7 +49,7 @@ jobs:
 
     - name: Pull dataset with DVC
       run: |
-        dvc pull -r gcs_remote
+        uv run dvc pull -r gcs_remote
 
     - name: Test model
       run: |
