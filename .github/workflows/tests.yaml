@@ -32,6 +32,11 @@ jobs:
         run: |
           uv sync --locked --dev --extra train
 
+      - name: Start BentoML service
+        run: |
+          uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService
+
       - name: Run tests
         run: |
+          env: BENTOML_URL=http://localhost:3000
           uv run coverage run -m pytest tests/ -v --ignore=tests/performancetests
