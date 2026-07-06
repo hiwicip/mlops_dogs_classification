@@ -15,6 +15,11 @@ CLASSES_FILE = Path("data/processed/classes.json")
 
 
 class DogModel(LightningModule):
+    """
+    A PyTorch Lightning module for dog breed classification using a pre-trained Vision Transformer (ViT) model.
+    This class handles the training, validation, and testing of the model, as well as logging
+    """
+
     def __init__(
         self,
         model_name: str = "google/vit-base-patch16-224",
@@ -46,7 +51,15 @@ class DogModel(LightningModule):
         self.test_outputs: list[dict[str, np.ndarray]] = []
         self.test_out_dir = test_out_dir
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
+        """
+        Perform a single training step.
+        Args:
+            batch (dict): A batch of data containing 'pixel_values' and 'labels'.
+            batch_idx (int): The index of the batch.
+        Returns:
+            torch.Tensor: The computed loss for the batch.
+        """
         img, target = batch["pixel_values"].to(self.device), batch["labels"].to(self.device)
         if img.ndim != 4 or img.shape[1] != 3 or img.shape[2] != 224 or img.shape[3] != 224:
             raise ValueError(f"Expected input shape [batch, 3, 224, 224], got {list(img.shape)}")
@@ -71,7 +84,15 @@ class DogModel(LightningModule):
             )
         return loss
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch: dict, batch_idx: int) -> None:
+        """
+        Perform a single validation step.
+        Args:
+            batch (dict): A batch of data containing 'pixel_values' and 'labels'.
+            batch_idx (int): The index of the batch.
+        Returns:
+            None
+        """
         img, target = batch["pixel_values"].to(self.device), batch["labels"].to(self.device)
         y_pred = self.model(img).logits
         loss = self.criterium(y_pred, target)
@@ -86,7 +107,15 @@ class DogModel(LightningModule):
             }
         )
 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch: dict, batch_idx: int) -> None:
+        """
+        Perform a single test step.
+        Args:
+            batch (dict): A batch of data containing 'pixel_values' and 'labels'.
+            batch_idx (int): The index of the batch.
+        Returns:
+            None
+        """
         img, target = batch["pixel_values"].to(self.device), batch["labels"].to(self.device)
         y_pred = self.model(img).logits
         loss = self.criterium(y_pred, target)
@@ -102,12 +131,14 @@ class DogModel(LightningModule):
         )
 
     def on_validation_epoch_end(self):
+        """Summarize validation results at the end of the epoch and log visualizations."""
         all_preds = np.concatenate([o["preds"] for o in self.val_outputs])
         all_targets = np.concatenate([o["targets"] for o in self.val_outputs])
         log_visualizations(all_preds, all_targets, self.id2label)
         self.val_outputs.clear()
 
     def on_test_epoch_end(self):
+        """Summarize test results at the end of the epoch and log visualizations."""
         all_preds = np.concatenate([o["preds"] for o in self.test_outputs])
         all_targets = np.concatenate([o["targets"] for o in self.test_outputs])
         log_visualizations(all_preds, all_targets, self.id2label)
@@ -135,21 +166,32 @@ class DogModel(LightningModule):
         np.save(output_dir / "all_labels.npy", np.array(all_targets))
 
     def configure_optimizers(self):
+        """Configure the optimizer for training."""
         return torch.optim.Adam(self.model.parameters(), lr=self.lr)
 
     def train_dataloader(self):
+        """Create the training data loader."""
         train_dataset = DogDataset(Path("data/processed/metadata.csv"), "train")
         return torch.utils.data.DataLoader(train_dataset, self.batch_size, shuffle=True)
 
     def val_dataloader(self):
+        """Create the validation data loader."""
         val_dataset = DogDataset(Path("data/processed/metadata.csv"), "test")
         return torch.utils.data.DataLoader(val_dataset, self.batch_size, shuffle=False)
 
     def test_dataloader(self):
+        """Create the test data loader."""
         test_dataset = DogDataset(Path("data/processed/metadata.csv"), "eval")
         return torch.utils.data.DataLoader(test_dataset, self.batch_size, shuffle=False)
 
-    def forward(self, pixel_values):
+    def forward(self, pixel_values: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass through the model.
+        Args:
+            pixel_values (torch.Tensor): Input tensor of shape [batch_size, 3, 224, 224].
+        Returns:
+            torch.Tensor: The logits output from the model.
+        """
         return self.model(pixel_values).logits
 
 

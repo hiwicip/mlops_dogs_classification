@@ -133,11 +133,11 @@ def extract_features(pixel_values: torch.Tensor) -> np.ndarray:
     return np.array(features)
 
 
-def compute_confidence(model, pixel_values: np.ndarray) -> np.ndarray:
+def compute_confidence(model: InferenceSession, pixel_values: np.ndarray) -> np.ndarray:
     """
     Compute the confidence scores for the predictions made by the model on the given pixel values.
     Args:
-        model: The ONNX model used for making predictions.
+        model (InferenceSession): The ONNX model used for making predictions.
         pixel_values (np.ndarray): A NumPy array containing the pixel values of images.
     Returns:
         np.ndarray: A NumPy array containing the confidence scores for each image.
