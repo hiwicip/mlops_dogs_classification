@@ -6,7 +6,7 @@ import wandb
 from sklearn.metrics import confusion_matrix
 
 
-def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict) -> None:
+def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict, logger) -> None:
     num_classes = len(idx_to_class)
 
     cm = confusion_matrix(labels, preds, normalize="true", labels=list(range(num_classes)))
@@ -29,7 +29,7 @@ def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict
         fontsize=6,
     )
     plt.tight_layout()
-    wandb.log({"confusion_matrix": wandb.Image(plt)})
+    logger.log({"confusion_matrix": wandb.Image(plt)})
     plt.close()
 
     correct = np.zeros(num_classes)

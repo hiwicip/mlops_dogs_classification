@@ -104,13 +104,13 @@ class DogModel(LightningModule):
     def on_validation_epoch_end(self):
         all_preds = np.concatenate([o["preds"] for o in self.val_outputs])
         all_targets = np.concatenate([o["targets"] for o in self.val_outputs])
-        log_visualizations(all_preds, all_targets, self.id2label)
+        log_visualizations(all_preds, all_targets, self.id2label, self.logger.experiment)
         self.val_outputs.clear()
 
     def on_test_epoch_end(self):
         all_preds = np.concatenate([o["preds"] for o in self.test_outputs])
         all_targets = np.concatenate([o["targets"] for o in self.test_outputs])
-        log_visualizations(all_preds, all_targets, self.id2label)
+        log_visualizations(all_preds, all_targets, self.id2label, self.logger.experiment)
         self.test_outputs.clear()
 
         correct_per_class: dict[int, int] = defaultdict(int)
