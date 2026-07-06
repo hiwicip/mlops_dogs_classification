@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --locked --dev --extra train
+          uv sync --locked --dev --extra train --extra serve
 
       - name: Start BentoML service
         run: |
