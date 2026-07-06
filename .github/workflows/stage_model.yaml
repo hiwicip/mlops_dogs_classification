@@ -77,7 +77,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --locked --dev --extra train
+        uv sync --locked --dev --extra train --extra cloud
 
     - name: Add production alias
       run: |
