@@ -168,7 +168,12 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 4 fill here ---
+We used uv to manage our dependencies. The list of dependencies was auto-generated using uv and stored in the uv.lock file. We added packages to our environment using the command `uv add <package>` and updated our environment using the command `uv sync`. To get a complete copy of our development environment, one would have to run the following commands:
+
+```bash
+uv venv --python 3.13
+uv sync
+```
 
 ### Question 5
 
@@ -184,7 +189,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 5 fill here ---
+From the cookiecutter template we have filled out the `.github`, `configs`, `dockerfiles`, `docs`, `models`, `src` and `tests` folder. We have removed the `notebooks` folder because we did not use any notebooks in our project. We have added a `data` folder, where we store the raw and the processed data, a `cloud` folder which contains mainly cloud build files and a `logs` folder, an `output` folder and a `wandb` folder.
 
 ### Question 6
 
@@ -199,7 +204,9 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 6 fill here ---
+For linting and formatting we mainly used ruff and ruff-format. We also have some basic pre-commit hooks like trailing whitespace and end-of-file-fixer. Ruff is configured with a 120-character line limit and selects a set of rules, which we have found to be good to keep our code clean and readable. They cover pycodestyle, pyflakes, import sorting, and some additional rules.
+We also used mypy for typing and docstrings for documentation.
+These concepts are important in larger projects to maintain a clean and readable codebase. It makes it easier for team members to understand each other's code. Typing helps catch errors early in the development process and documentation helps to understand the purpose and usage of functions and classes.
 
 ## Version control
 
@@ -248,7 +255,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 9 fill here ---
+For every To-Do, we created an issue in GitHub and assigned it to a group member. The person working on the issue created a branch linked to the issue and worked on it. As soon as the work was done, a pull request was created. Linting and unit tests were run automatically and only if all passed, the pull request was stashed and merged into the main branch. The linked issue was then automatically closed. We had a ruleset for our main branch that prohibited direct commits to the main branch, which ensured that all code required creating a pull request and passing the tests before being merged. In addition, to keep our commit history clean, we required that all pull requests were squashed before merging, so we only had one commit per pull request in the main branch.
 
 ### Question 10
 
@@ -280,7 +287,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 11 fill here ---
+Our continous integration is organized into 3 parts: we had a linting workflow, a unit testing workflow and a trigger workflow for automatically building our docker images. The linting workflow runs on every push to the main branch as well as on pull requests on the main branch. We ensured that the linting tests were also already part of our pre-commit hooks, so that we could catch linting errors before pushing code to the repository and thereby avoid failing the CI workflow. The unit testing workflow runs on pull-requests only, but since pull-requests are required to be created before merging code into the main branch, this ensures that all code is unit tested before being merged. The unit testing workflow runs on multiple operating systems (Linux, Windows and MacOS). We also make use of caching by caching the uv downloaded cache and the huggingface model, so that we do not have to download these every time the workflow is run. We had 4 trigger workflows for automatically building our docker images: one for the training docker image, one for the evaluation docker images, one for the backend and one for the frontend of our application. The trigger workflow for automatically building our docker images runs when merges are made to the main branch, but only if the merge includes changes to the respective files that are used to build the docker images (for example changes to train.py or train.dockerfile for the training docker image).
 
 ## Running code and tracking experiments
 
@@ -378,7 +385,16 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 17 fill here ---
+We used the following GCP services:
+- Cloud Storage: We stored our data, trained models, input-output data and drift reports in GCP buckets.
+- Secret Manager: We used Secret Manager to store API keys (like the W&B API key).
+- Service Account: We created service accounts to give our applications access to the GCP services.
+- Compute Engine: We used Compute Engine to run training jobs.
+- Vertex AI: We also used Vertex AI to train our models in the cloud. Our final model was trained in Vertex AI.
+- Artifact Registry: We stored our docker images in the artifact registry.
+- Cloud Build: We used cloud build to automatically build our docker images. We implemented a trigger workflow that automatically builds the respective docker images when changes to the according files are pushed to the main branch.
+- Cloud Run: We deployed our Backend and Frontend applications in Cloud Run.
+- Cloud Scheduler: We used Cloud Scheduler to schedule a minutely job that pings the backend application to keep it alive and avoid cold starts.
 
 ### Question 18
 
@@ -452,7 +468,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 23 fill here ---
+We did manage to write an API for our model. We first created a FastAPI application and also deployed it in the cloud, but later we switched to using BentoML to create a more specialized ML-deployment API.
 
 ### Question 24
 
@@ -468,7 +484,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 24 fill here ---
+We can deploy our API locally by running the command `invoke bentoml` (only the backend) or `invoke frontend` in the terminal. This will start a local server that can be accessed at `http://localhost:3000`. Our API is also deployed in the cloud using Cloud Run. The backend can be accessed at `https://dogs-bentoml-288634047169.europe-west4.run.app/` and the frontend can be accessed at `https://dogs-frontend-288634047169.europe-west4.run.app/`.
 
 ### Question 25
 
