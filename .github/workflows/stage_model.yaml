@@ -45,11 +45,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --locked --dev --extra train --extra cloud
-
-    - name: Download Data
-      run: |
-        uv run gsutil -m cp -r gs://mlops-dog-data-euwest4/data/processed
+        uv sync --locked --dev --extra train
 
     - name: Test model
       run: |
@@ -77,7 +73,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --locked --dev --extra train --extra cloud
+        uv sync --locked --dev --extra train
 
     - name: Add production alias
       run: |
