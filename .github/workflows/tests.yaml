@@ -38,6 +38,7 @@ jobs:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Start BentoML service
+        shell: bash
         run: |
           uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService &
 
