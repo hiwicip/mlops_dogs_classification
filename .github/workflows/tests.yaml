@@ -42,7 +42,5 @@ jobs:
           uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService &
 
       - name: Run tests
-        env:
-          BENTOML_URL=http://localhost:3000
         run: |
           uv run coverage run -m pytest tests/ -v --ignore=tests/performancetests
