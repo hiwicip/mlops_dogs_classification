@@ -35,7 +35,7 @@ jobs:
       - name: Download model
         run: |
           mkdir -p models
-          gsutil cp gs://mlops-dog-data-euwest4/models/dog_classifier.onnx models/dog_classifier.onnx
+          uv run gsutil cp gs://mlops-dog-data-euwest4/models/dog_classifier.onnx models/dog_classifier.onnx
 
       - name: Start BentoML service
         run: |
