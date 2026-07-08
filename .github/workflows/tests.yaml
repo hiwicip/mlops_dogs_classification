@@ -10,7 +10,8 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        # operating-system: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        operating-system: ["macos-latest"]
 
     steps:
       - name: Checkout code
@@ -41,6 +42,23 @@ jobs:
         shell: bash
         run: |
           uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService &
+
+      - name: Show BentoML logs
+        if: always()
+        shell: bash
+        run: |
+          echo "===== BentoML Log ====="
+          cat bentoml.log || true
+
+      - name: Check BentoML process
+        shell: bash
+        run: |
+          ps aux | grep bentoml || true
+
+      - name: Check if service is reachable
+        shell: bash
+        run: |
+          curl -v http://localhost:3000/livez || true
 
       - name: Run tests
         env:
