@@ -41,7 +41,11 @@ jobs:
       - name: Start BentoML service
         shell: bash
         run: |
-          uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService &
+          uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService > bentoml.log 2>&1 &
+
+      - name: Wait
+        shell: bash
+        run: sleep 10
 
       - name: Show BentoML logs
         if: always()
@@ -59,6 +63,11 @@ jobs:
         shell: bash
         run: |
           curl -v http://localhost:3000/livez || true
+
+      - name: Show listening ports
+        shell: bash
+        run: |
+          lsof -iTCP -sTCP:LISTEN
 
       - name: Run tests
         env:
