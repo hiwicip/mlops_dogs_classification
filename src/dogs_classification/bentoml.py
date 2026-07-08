@@ -81,9 +81,15 @@ def _ensure_onnx_model() -> None:
 class DogBreedClassificationService:
     def __init__(self):
         super().__init__()
+        print("1")
+        print("Downloading model...")
         _ensure_onnx_model()
+        print("Model downloaded.")
+        print("2")
         self.model = InferenceSession(str(ONNX_MODEL_PATH))
+        print("3")
         self.processor = AutoImageProcessor.from_pretrained(MODEL_NAME)
+        print("4")
         with open("data/processed/classes.json") as f:
             label2id = json.load(f)
         self.idx_to_class = {idx: name for name, idx in label2id.items()}

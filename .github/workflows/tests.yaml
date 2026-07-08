@@ -41,11 +41,23 @@ jobs:
       - name: Start BentoML service
         shell: bash
         run: |
+          PYTHONUNBUFFERED=1 \
           uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService > bentoml.log 2>&1 &
 
-      - name: Wait
+      - name: Wait for BentoML
         shell: bash
-        run: sleep 10
+        run: |
+          for i in {1..150}; do
+            if curl -fs http://localhost:3000/livez; then
+              echo "BentoML is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "BentoML did not become ready after 5 minutes"
+          cat bentoml.log || true
+          exit 1
 
       - name: Show BentoML logs
         if: always()
@@ -63,11 +75,6 @@ jobs:
         shell: bash
         run: |
           curl -v http://localhost:3000/livez || true
-
-      - name: Show listening ports
-        shell: bash
-        run: |
-          lsof -iTCP -sTCP:LISTEN
 
       - name: Run tests
         env:
