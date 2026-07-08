@@ -10,8 +10,7 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        # operating-system: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        operating-system: ["macos-latest"]
+        operating-system: ["ubuntu-latest", "windows-latest", "macos-latest"]
 
     steps:
       - name: Checkout code
@@ -41,8 +40,7 @@ jobs:
       - name: Start BentoML service
         shell: bash
         run: |
-          PYTHONUNBUFFERED=1 \
-          uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService > bentoml.log 2>&1 &
+          uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService &
 
       - name: Wait for BentoML
         shell: bash
@@ -56,25 +54,7 @@ jobs:
           done
 
           echo "BentoML did not become ready after 5 minutes"
-          cat bentoml.log || true
           exit 1
-
-      - name: Show BentoML logs
-        if: always()
-        shell: bash
-        run: |
-          echo "===== BentoML Log ====="
-          cat bentoml.log || true
-
-      - name: Check BentoML process
-        shell: bash
-        run: |
-          ps aux | grep bentoml || true
-
-      - name: Check if service is reachable
-        shell: bash
-        run: |
-          curl -v http://localhost:3000/livez || true
 
       - name: Run tests
         env:
