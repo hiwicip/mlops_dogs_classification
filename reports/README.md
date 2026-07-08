@@ -338,7 +338,15 @@ Our continous integration is organized into 3 parts: we had a linting workflow, 
 >
 > Answer:
 
---- question 14 fill here ---
+![W&B Runs](figures/wandb1.PNG)
+![W&B Logging](figures/wandb2.PNG)
+![W&B Media](figures/wandb3.PNG)
+
+We used Weights & Biases to track our experiments.
+The first images shows the last logged runs in W&B with some of the logged metrics.
+We tracked the training loss, training accuracy, validation loss and validation accuracy. Charts of these metrics can be seen in the bottom section of the second image. The training loss and accuracy inform us about how well our model is learning during training, while the validation loss and accuracy inform us about how well our model generalizes to unseen data. As seen in the both the first and the second image, some of our models had a training accuracy of 100%. Such models could be overfitting to the training data, which is why we paid more attention to the validation metrics.
+We also tracked hyperparameters like learning rate, batch size and epochs. In the upper sections of the second image we compared the validation accuracy of different runs with different hyperparameters. We did multiple hyperparameter sweeps to find the best hyperparameters for our model. Charts like these helped us to visualize the effect of different hyperparameters on the performance of our model.
+The third image shows some of the media that we logged in W&B: after each training epoch we logged a confusion matrix and a chart showing the accuracy per class. We also logged some sampled images of the input data and the corresponding model predictions and the true labels (not shown in the screenshot).
 
 ### Question 15
 
