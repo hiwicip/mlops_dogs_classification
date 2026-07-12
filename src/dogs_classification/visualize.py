@@ -43,7 +43,7 @@ def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict
 
     correct = np.zeros(num_classes)
     total = np.zeros(num_classes)
-    for p, t in zip(preds, labels):
+    for p, t in zip(preds, labels, strict=True):
         total[t] += 1
         if p == t:
             correct[t] += 1

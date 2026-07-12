@@ -12,16 +12,17 @@ BUCKET_NAME = "mlops-dog-data-euwest4"
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="config.yaml")
-def evaluate(cfg: DictConfig):
+def evaluate(cfg: DictConfig, checkpoint_path: str = "models/best_model.pt"):
     """
     Evaluate the dog classification model on the test set.
     Args:
         cfg (DictConfig): The configuration object containing evaluation parameters.
+        checkpoint_path (str): The path to the checkpoint file that should be evaluated.
     Returns:
         None
     """
     model = DogModel(model_name=cfg.model.name, batch_size=cfg.training.batch_size)
-    model.load_state_dict(torch.load("models/best_model.pt", map_location=DEVICE))
+    model.load_state_dict(torch.load(checkpoint_path, map_location=DEVICE))
 
     wandb_logger = WandbLogger(
         project="dogs-classification",

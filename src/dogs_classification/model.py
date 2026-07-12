@@ -147,7 +147,7 @@ class DogModel(LightningModule):
         correct_per_class: dict[int, int] = defaultdict(int)
         total_per_class: dict[int, int] = defaultdict(int)
 
-        for pred, label in zip(all_preds, all_targets):
+        for pred, label in zip(all_preds, all_targets, strict=True):
             total_per_class[label] += 1
             if pred == label:
                 correct_per_class[label] += 1
