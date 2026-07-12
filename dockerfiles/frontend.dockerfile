@@ -5,13 +5,13 @@ WORKDIR /app
 COPY uv.lock uv.lock
 COPY pyproject.toml pyproject.toml
 
-RUN uv sync --frozen --no-install-project
+RUN uv sync --frozen --extra frontend --no-install-project --extra frontend
 
 COPY src src/
 COPY README.md README.md
 COPY LICENSE LICENSE
 
-RUN uv sync --frozen
+RUN uv sync --frozen --extra frontend
 
 EXPOSE 8501
 
