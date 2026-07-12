@@ -168,11 +168,16 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
-We used uv to manage our dependencies. The list of dependencies was auto-generated using uv and stored in the uv.lock file. We added packages to our environment using the command `uv add <package>` and updated our environment using the command `uv sync`. To get a complete copy of our development environment, one would have to run the following commands:
+We used uv to manage our dependencies. All project dependencies are declared in the pyproject.toml file. The corresponding uv.lock file ensures that every team member installs exactly the same package versions. This file was was auto-generated and is updated whenever we added or removed packages from our environment. We added packages to our environment using the command `uv add <package>`.
+In the pyproject.toml file we separated dependencies into optional groups (train, serve, frontend and cloud) so that our Docker images only install the packages required for their specific purpose, reducing both image size and build time.
+Since we locally need all dependencies, we installed all optional groups with `uv sync --all-extras`. We run this command every time we added or updated a package to our environment.
+Whenever we start working on our code, we ensure being in the right virtual environment by running `source .venv/bin/activate`.
+
+To get a complete copy of our development environment, one would have to run the following commands:
 
 ```bash
 uv venv --python 3.13
-uv sync
+uv sync --all-extras
 ```
 
 ### Question 5
