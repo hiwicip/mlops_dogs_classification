@@ -96,7 +96,6 @@ explicit = true
 
 [tool.ruff]
 line-length = 120
-ignore = ["B008"]
 
 [tool.ruff.lint]
 select = [
@@ -106,6 +105,7 @@ select = [
     "B",   # flake8-bugbear (common bugs)
     "UP",  # pyupgrade (modern Python syntax)
 ]
+ignore = ["B008"]
 
 [tool.ruff.lint.isort]
 known-third-party = ["wandb"]

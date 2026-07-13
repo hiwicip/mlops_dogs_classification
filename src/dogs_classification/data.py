@@ -227,9 +227,7 @@ def preprocess(data_path: Path = RAW_DIR, output_folder: Path = PROCESSED_DIR) -
             shuffle=True,
         )
 
-        print(
-            f"{breed_name}: " f"{len(train_images)} train / " f"{len(eval_images)} eval / " f"{len(test_images)} test"
-        )
+        print(f"{breed_name}: {len(train_images)} train / {len(eval_images)} eval / {len(test_images)} test")
 
         for image_path in train_images:
             image = Image.open(image_path).convert("RGB")
