@@ -1543,7 +1543,10 @@
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">preprocess</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">RAW_DIR</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">PROCESSED_DIR</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">preprocess</span><span class="p">(</span>
+    <span class="n">data_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">RAW_DIR</span><span class="p">,</span>
+    <span class="n">output_folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">PROCESSED_DIR</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -1776,9 +1779,7 @@ and saving the processed images to the output folder and creating a metadata CSV
 <span class="normal">310</span>
 <span class="normal">311</span>
 <span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
-<span class="normal">315</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">preprocess</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">RAW_DIR</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">PROCESSED_DIR</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">313</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">preprocess</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">RAW_DIR</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">PROCESSED_DIR</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Preprocess the Stanford Dogs dataset by splitting it into train, test, and eval sets,</span>
 <span class="sd">    using only the specified breeds, preprocessing the images with the AutoImageProcessor,</span>
@@ -1845,9 +1846,7 @@ and saving the processed images to the output folder and creating a metadata CSV
             <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">breed_name</span><span class="si">}</span><span class="s2">: &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">train_images</span><span class="p">)</span><span class="si">}</span><span class="s2"> train / &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">eval_images</span><span class="p">)</span><span class="si">}</span><span class="s2"> eval / &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_images</span><span class="p">)</span><span class="si">}</span><span class="s2"> test&quot;</span>
-        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">breed_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">train_images</span><span class="p">)</span><span class="si">}</span><span class="s2"> train / </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">eval_images</span><span class="p">)</span><span class="si">}</span><span class="s2"> eval / </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_images</span><span class="p">)</span><span class="si">}</span><span class="s2"> test&quot;</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">image_path</span> <span class="ow">in</span> <span class="n">train_images</span><span class="p">:</span>
             <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
@@ -3821,7 +3820,12 @@ This class handles the training, validation, and testing of the model, as well a
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">log_visualizations</span><span class="p">(</span><span class="n">preds</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">idx_to_class</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">log_visualizations</span><span class="p">(</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">idx_to_class</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">logger</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -4450,7 +4454,13 @@ This service handles image preprocessing, model inference, and saving prediction
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">save_prediction</span><span class="p">(</span><span class="n">timestamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="p">,</span> <span class="n">predicted_class</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">confidence</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">predictions</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">save_prediction</span><span class="p">(</span>
+    <span class="n">timestamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="p">,</span>
+    <span class="n">predicted_class</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">confidence</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">predictions</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -4976,7 +4986,9 @@ sends the image to the backend for classification, and displays the results.</p>
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">download_predictions_from_gcs</span><span class="p">(</span><span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">download_predictions_from_gcs</span><span class="p">(</span>
+    <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5151,7 +5163,9 @@ sends the image to the backend for classification, and displays the results.</p>
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">load_reference_pixel_values</span><span class="p">(</span><span class="n">reference_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">load_reference_pixel_values</span><span class="p">(</span>
+    <span class="n">reference_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5252,7 +5266,9 @@ sends the image to the backend for classification, and displays the results.</p>
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">load_current_pixel_values</span><span class="p">(</span><span class="n">current_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">load_current_pixel_values</span><span class="p">(</span>
+    <span class="n">current_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5512,7 +5528,9 @@ sends the image to the backend for classification, and displays the results.</p>
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">compute_confidence</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">InferenceSession</span><span class="p">,</span> <span class="n">pixel_values</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">compute_confidence</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">InferenceSession</span><span class="p">,</span> <span class="n">pixel_values</span><span class="p">:</span> <span class="n">ndarray</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5653,7 +5671,9 @@ sends the image to the backend for classification, and displays the results.</p>
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">upload_report_to_gcs</span><span class="p">(</span><span class="n">local_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">upload_report_to_gcs</span><span class="p">(</span>
+    <span class="n">local_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
