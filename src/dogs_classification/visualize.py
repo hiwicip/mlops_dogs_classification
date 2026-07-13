@@ -7,6 +7,16 @@ from sklearn.metrics import confusion_matrix
 
 
 def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict, logger) -> None:
+    """
+    Log visualizations of the model's predictions and accuracy per class to Weights & Biases (wandb).
+    Args:
+        preds (np.ndarray): The predicted class indices.
+        labels (np.ndarray): The true class indices.
+        idx_to_class (dict): A mapping from class indices to class names.
+    Returns:
+        None
+    """
+
     num_classes = len(idx_to_class)
 
     cm = confusion_matrix(labels, preds, normalize="true", labels=list(range(num_classes)))
@@ -34,7 +44,7 @@ def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict
 
     correct = np.zeros(num_classes)
     total = np.zeros(num_classes)
-    for p, t in zip(preds, labels):
+    for p, t in zip(preds, labels, strict=True):
         total[t] += 1
         if p == t:
             correct[t] += 1
@@ -48,7 +58,7 @@ def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict
     plt.ylabel("Accuracy")
     plt.title("Accuracy per Dog Breed")
     plt.tight_layout()
-    wandb.log({"accuracy_per_class": wandb.Image(plt)})
+    logger.log({"accuracy_per_class": wandb.Image(plt)})
     plt.close()
 
 
