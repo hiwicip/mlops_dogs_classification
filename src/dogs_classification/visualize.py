@@ -58,7 +58,7 @@ def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict
     plt.ylabel("Accuracy")
     plt.title("Accuracy per Dog Breed")
     plt.tight_layout()
-    wandb.log({"accuracy_per_class": wandb.Image(plt)})
+    logger.log({"accuracy_per_class": wandb.Image(plt)})
     plt.close()
 
 

@@ -210,8 +210,6 @@ class DogModel(LightningModule):
                 total += labels.size(0)
         return correct / total if total > 0 else 0.0
 
-        
-
 
 if __name__ == "__main__":
     model = DogModel()

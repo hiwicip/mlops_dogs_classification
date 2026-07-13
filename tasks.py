@@ -51,12 +51,11 @@ def train(
 @task
 def evaluate(
     ctx: Context,
-    config_path: str = "../../configs",
-    config_name: str = "config.yaml",
+    artifact_name: str = "best_model:latest",
 ) -> None:
     """Evaluate model."""
     ctx.run(
-        f"uv run src/{PROJECT_NAME}/evaluate.py --config-path {config_path} --config-name {config_name}",
+        f"uv run src/{PROJECT_NAME}/evaluate.py --artifact-name {artifact_name}",
         echo=True,
         pty=not WINDOWS,
     )
@@ -67,6 +66,12 @@ def test(ctx: Context) -> None:
     """Run tests."""
     ctx.run("uv run coverage run -m pytest tests/", echo=True, pty=not WINDOWS)
     ctx.run("uv run coverage report -m -i", echo=True, pty=not WINDOWS)
+
+
+@task
+def lint(ctx: Context) -> None:
+    """Run pre-commit hooks."""
+    ctx.run("uv run pre-commit run --all-files", echo=True, pty=not WINDOWS)
 
 
 @task

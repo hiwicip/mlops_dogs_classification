@@ -1,6 +1,8 @@
-import hydra
+from pathlib import Path
+
 import torch
-from omegaconf import DictConfig
+import typer
+import wandb
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
 
@@ -10,29 +12,58 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 BUCKET_NAME = "mlops-dog-data-euwest4"
 
+WANDB_ENTITY = "awinterstetter"
+WANDB_PROJECT = "dogs-classification"
 
-@hydra.main(version_base=None, config_path="../../configs", config_name="config.yaml")
-def evaluate(cfg: DictConfig, checkpoint_path: str = "models/best_model.pt"):
+app = typer.Typer()
+
+
+@app.command()
+def evaluate(artifact_name: str = "best_model:latest"):
     """
     Evaluate the dog classification model on the test set.
     Args:
-        cfg (DictConfig): The configuration object containing evaluation parameters.
-        checkpoint_path (str): The path to the checkpoint file that should be evaluated.
+        artifact_name (str): The name of the W&B artifact to evaluate.
     Returns:
         None
     """
-    model = DogModel(model_name=cfg.model.name, batch_size=cfg.training.batch_size)
+
+    api = wandb.Api()
+
+    artifact = api.artifact(f"{WANDB_ENTITY}/{WANDB_PROJECT}/{artifact_name}")
+
+    filename = next(iter(artifact.manifest.entries.values())).path
+
+    checkpoint_path = Path("models") / filename
+
+    if checkpoint_path.exists():
+        print("Using local model:", checkpoint_path)
+    else:
+        print("Downloading model from W&B artifact:", artifact_name)
+        artifact.download(root="models")
+        download_dir = Path(artifact.download(root="models"))
+        checkpoint_path = download_dir / filename
+
+    run = artifact.logged_by()
+    config = run.config  # get the config from the run that logged the artifact
+
+    model_name = config["model_name"]
+    batch_size = config["batch_size"]
+    lr = config["learning_rate"]
+    epochs = config["epochs"]
+
+    model = DogModel(model_name=model_name, batch_size=batch_size)
     model.load_state_dict(torch.load(checkpoint_path, map_location=DEVICE))
 
     wandb_logger = WandbLogger(
-        project="dogs-classification",
-        entity="awinterstetter",
+        project=WANDB_PROJECT,
+        entity=WANDB_ENTITY,
         job_type="evaluation",
         config={
-            "learning_rate": cfg.training.lr,
-            "batch_size": cfg.training.batch_size,
-            "epochs": cfg.training.epochs,
-            "model_name": cfg.model.name,
+            "learning_rate": lr,
+            "batch_size": batch_size,
+            "epochs": epochs,
+            "model_name": model_name,
         },
     )
 
@@ -58,4 +89,4 @@ def evaluate(cfg: DictConfig, checkpoint_path: str = "models/best_model.pt"):
 
 
 if __name__ == "__main__":
-    evaluate()
+    app()
