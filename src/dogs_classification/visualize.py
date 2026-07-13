@@ -9,10 +9,12 @@ from sklearn.metrics import confusion_matrix
 def log_visualizations(preds: np.ndarray, labels: np.ndarray, idx_to_class: dict, logger) -> None:
     """
     Log visualizations of the model's predictions and accuracy per class to Weights & Biases (wandb).
+
     Args:
         preds (np.ndarray): The predicted class indices.
         labels (np.ndarray): The true class indices.
         idx_to_class (dict): A mapping from class indices to class names.
+
     Returns:
         None
     """

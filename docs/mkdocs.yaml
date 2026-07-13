@@ -18,6 +18,8 @@ plugins:
             show_root_heading: true
             separate_signature: true
             show_signature_annotations: true
+            heading_level: 3
 
 nav:
   - Home: index.md
+  - Documentation: docs.md

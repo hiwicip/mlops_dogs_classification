@@ -139,8 +139,6 @@ class DogDataset(Dataset):
 def download_data() -> Path:
     """
     Download the Stanford Dogs dataset from Kaggle and copy it to the RAW_DIR.
-    Args:
-        None
 
     Returns:
         Path: The path to the downloaded raw dataset.
@@ -166,6 +164,7 @@ def preprocess(data_path: Path = RAW_DIR, output_folder: Path = PROCESSED_DIR) -
     Preprocess the Stanford Dogs dataset by splitting it into train, test, and eval sets,
     using only the specified breeds, preprocessing the images with the AutoImageProcessor,
     and saving the processed images to the output folder and creating a metadata CSV file.
+
     Args:
         data_path (Path): The path to the raw dataset.
         output_folder (Path): The path to the folder where the processed dataset will be saved.
