@@ -54,9 +54,11 @@ class DogModel(LightningModule):
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
         """
         Perform a single training step.
+
         Args:
             batch (dict): A batch of data containing 'pixel_values' and 'labels'.
             batch_idx (int): The index of the batch.
+
         Returns:
             torch.Tensor: The computed loss for the batch.
         """
@@ -87,9 +89,11 @@ class DogModel(LightningModule):
     def validation_step(self, batch: dict, batch_idx: int) -> None:
         """
         Perform a single validation step.
+
         Args:
             batch (dict): A batch of data containing 'pixel_values' and 'labels'.
             batch_idx (int): The index of the batch.
+
         Returns:
             None
         """
@@ -110,9 +114,11 @@ class DogModel(LightningModule):
     def test_step(self, batch: dict, batch_idx: int) -> None:
         """
         Perform a single test step.
+
         Args:
             batch (dict): A batch of data containing 'pixel_values' and 'labels'.
             batch_idx (int): The index of the batch.
+
         Returns:
             None
         """
@@ -190,8 +196,10 @@ class DogModel(LightningModule):
     def forward(self, pixel_values: torch.Tensor) -> torch.Tensor:
         """
         Forward pass through the model.
+
         Args:
             pixel_values (torch.Tensor): Input tensor of shape [batch_size, 3, 224, 224].
+
         Returns:
             torch.Tensor: The logits output from the model.
         """
