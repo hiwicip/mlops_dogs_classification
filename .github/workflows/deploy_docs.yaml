@@ -34,4 +34,4 @@ jobs:
         uv sync --locked --dev
 
     - name: Deploy docs
-      run: uv run mkdocs gh-deploy --force
+      run: uv run mkdocs gh-deploy --force --config-file docs/mkdocs.yaml
