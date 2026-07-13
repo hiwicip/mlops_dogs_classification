@@ -19,11 +19,13 @@ app = typer.Typer()
 
 
 @app.command()
-def evaluate(artifact_name: str = "best_model:latest"):
+def evaluate(artifact_name: str = "best_model:latest") -> None:
     """
     Evaluate the dog classification model on the test set.
+
     Args:
         artifact_name (str): The name of the W&B artifact to evaluate.
+
     Returns:
         None
     """
