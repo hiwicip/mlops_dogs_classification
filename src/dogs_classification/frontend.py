@@ -10,6 +10,11 @@ from PIL import Image
 
 @st.cache_resource
 def get_backend_url() -> str:
+    """
+    Retrieve the backend service URL from Google Cloud Run or environment variables.
+    Returns:
+        str: The backend service URL.
+    """
     parent = "projects/mlopsdogclassification/locations/europe-west4"
     client = run_v2.ServicesClient()
     services = client.list_services(parent=parent)
@@ -20,6 +25,11 @@ def get_backend_url() -> str:
 
 
 def main() -> None:
+    """
+    Function to run the Streamlit frontend for the Dog Breed Classifier application.
+    This function sets up the Streamlit interface, handles image uploads and camera input,
+    sends the image to the backend for classification, and displays the results.
+    """
     st.set_page_config(page_title="Dog Breed Classifier", page_icon="🐶", layout="wide")
     st.title("🐶 Dog Breed Classifier")
 

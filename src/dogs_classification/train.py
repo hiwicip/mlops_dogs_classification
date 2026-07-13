@@ -18,6 +18,13 @@ BUCKET_NAME = "mlops-dog-data-euwest4"
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="config.yaml")
 def train(cfg: DictConfig):
+    """
+    Train the dog classification model.
+    Args:
+        cfg (DictConfig): The configuration object containing training parameters.
+    Returns:
+        None
+    """
     lr = cfg.training.lr
     batch_size = cfg.training.batch_size
     epochs = cfg.training.epochs

@@ -26,7 +26,20 @@ image_size_summary = Summary("image_pixels", "Number of pixels in uploaded image
 gcs_upload_error_counter = Counter("gcs_upload_error", "Number of failed prediction uploads to GCS")
 
 
-def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, confidence: float, predictions: list):
+def save_prediction(
+    timestamp: str, image: Image.Image, predicted_class: str, confidence: float, predictions: list
+) -> None:
+    """
+    Save the prediction results to Google Cloud Storage (GCS) as a JSON file.
+    Args:
+        timestamp (str): The timestamp of the prediction.
+        image (Image.Image): The input image.
+        predicted_class (str): The predicted class label.
+        confidence (float): The confidence score of the prediction.
+        predictions (list): The top 5 predictions with their confidence scores.
+    Returns:
+        None
+    """
     try:
         client = storage.Client(project=PROJECT_ID)
         bucket = client.bucket(BUCKET_NAME)
@@ -79,6 +92,11 @@ def _ensure_onnx_model() -> None:
 
 @bentoml.service
 class DogBreedClassificationService:
+    """
+    A BentoML service for dog breed classification using a pre-trained ONNX model.
+    This service handles image preprocessing, model inference, and saving predictions to Google Cloud Storage
+    """
+
     def __init__(self):
         super().__init__()
         _ensure_onnx_model()
@@ -90,6 +108,13 @@ class DogBreedClassificationService:
 
     @bentoml.api
     def predict(self, image: Image.Image, ctx: bentoml.Context) -> dict:
+        """
+        Perform prediction on the input image and return the top 5 predictions with their confidence scores.
+        Args:
+            image (Image.Image): The input image for prediction.
+            ctx (bentoml.Context): The BentoML context for the request.
+        Returns:
+            dict: A dictionary containing the top 5 predictions and their confidence scores."""
         request_counter.inc()
         image_size_summary.observe(image.width * image.height)
 

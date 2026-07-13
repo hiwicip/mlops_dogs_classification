@@ -35,6 +35,15 @@ model = InferenceSession(ONNX_MODEL_PATH)
 
 
 def download_predictions_from_gcs(bucket_name: str, prefix: str) -> pd.DataFrame:
+    """
+    Download prediction JSON files from Google Cloud Storage (GCS) and return a DataFrame containing the predictions.
+    Args:
+        bucket_name (str): The name of the GCS bucket.
+        prefix (str): The prefix for the prediction files in the GCS bucket.
+    Returns:
+        pd.DataFrame: A DataFrame containing the predictions with columns for image path, predicted class,
+        and confidence.
+    """
     client = storage.Client()
     bucket = client.bucket(bucket_name)
     blobs = list(bucket.list_blobs(prefix=prefix))
@@ -68,11 +77,26 @@ def download_predictions_from_gcs(bucket_name: str, prefix: str) -> pd.DataFrame
 
 
 def load_reference_pixel_values(reference_df: pd.DataFrame) -> torch.Tensor:
+    """
+    Load pixel values for the reference dataset from the local file system.
+    Args:
+        reference_df (pd.DataFrame): A DataFrame containing the reference dataset with image paths.
+    Returns:
+        torch.Tensor: A tensor containing the pixel values of the reference images.
+    """
     pixel_values = [torch.load(image_path) for image_path in reference_df["image_path"].tolist()]
     return torch.stack(pixel_values)
 
 
 def load_current_pixel_values(current_df: pd.DataFrame, bucket_name: str) -> torch.Tensor:
+    """
+    Load pixel values for the current dataset from Google Cloud Storage (GCS).
+    Args:
+        current_df (pd.DataFrame): A DataFrame containing the current dataset with image paths.
+        bucket_name (str): The name of the GCS bucket.
+    Returns:
+        torch.Tensor: A tensor containing the pixel values of the current images.
+    """
     client = storage.Client()
     bucket = client.bucket(bucket_name)
 
@@ -86,7 +110,14 @@ def load_current_pixel_values(current_df: pd.DataFrame, bucket_name: str) -> tor
     return torch.stack(pixel_values)
 
 
-def extract_features(pixel_values):
+def extract_features(pixel_values: torch.Tensor) -> np.ndarray:
+    """
+    Extract features (brightness, contrast, sharpness) from the pixel values of images.
+    Args:
+        pixel_values (torch.Tensor): A tensor containing the pixel values of images.
+    Returns:
+        np.ndarray: A NumPy array containing the extracted features for each image.
+    """
     features = []
 
     for img in pixel_values.numpy():
@@ -102,7 +133,15 @@ def extract_features(pixel_values):
     return np.array(features)
 
 
-def compute_confidence(model, pixel_values: np.ndarray) -> np.ndarray:
+def compute_confidence(model: InferenceSession, pixel_values: np.ndarray) -> np.ndarray:
+    """
+    Compute the confidence scores for the predictions made by the model on the given pixel values.
+    Args:
+        model (InferenceSession): The ONNX model used for making predictions.
+        pixel_values (np.ndarray): A NumPy array containing the pixel values of images.
+    Returns:
+        np.ndarray: A NumPy array containing the confidence scores for each image.
+    """
     confidences = []
 
     for x in pixel_values:
@@ -119,6 +158,15 @@ def compute_confidence(model, pixel_values: np.ndarray) -> np.ndarray:
 
 
 def upload_report_to_gcs(local_path: str, bucket_name: str, destination_path: str) -> None:
+    """
+    Upload the generated drift report to Google Cloud Storage (GCS).
+    Args:
+        local_path (str): The local path to the drift report file.
+        bucket_name (str): The name of the GCS bucket.
+        destination_path (str): The destination path in the GCS bucket where the report will be uploaded.
+    Returns:
+        None
+    """
     client = storage.Client()
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(destination_path)
@@ -127,6 +175,15 @@ def upload_report_to_gcs(local_path: str, bucket_name: str, destination_path: st
 
 
 def main() -> None:
+    """
+    Main function to perform data drift analysis between the reference dataset and the current predictions.
+    It downloads the predictions from GCS, loads the reference and current pixel values, extracts features,
+    computes confidence scores, and generates a drift report which is then uploaded to GCS.
+    Args:
+        None
+    Returns:
+        None
+    """
     reference_df = pd.read_csv(METADATA_PATH)
     reference_df = reference_df[reference_df["split"] == "train"].reset_index(drop=True)
     reference_df = (
