@@ -33,16 +33,20 @@ jobs:
           uv sync --locked --dev --extra train --extra serve
 
       - name: Auth with GCP
+        if: github.actor != 'dependabot[bot]'
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Start BentoML service
+        if: github.actor != 'dependabot[bot]'
         shell: bash
         run: |
           uv run bentoml serve src.dogs_classification.bentoml:DogBreedClassificationService &
 
+
       - name: Wait for BentoML
+        if: github.actor != 'dependabot[bot]'
         shell: bash
         run: |
           for i in {1..150}; do
@@ -59,5 +63,11 @@ jobs:
       - name: Run tests
         env:
           BENTOML_URL: http://localhost:3000
+          HAS_GCP: ${{ github.actor != 'dependabot[bot]' }}
+        shell: bash
         run: |
-          uv run coverage run -m pytest tests/ -v --ignore=tests/performancetests
+          if [ "$HAS_GCP" = "true" ]; then
+            uv run coverage run -m pytest tests/ -v --ignore=tests/performancetests
+          else
+            uv run coverage run -m pytest tests/ -v --ignore=tests/performancetests --ignore=tests/test_bentoml.py
+          fi
