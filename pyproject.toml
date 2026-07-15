@@ -43,7 +43,7 @@ train = [
     "onnxscript>=0.7.0",
 ]
 serve = [
-    "fastapi==0.138.0",
+    "fastapi==0.139.0",
     "uvicorn==0.49.0",
     "bentoml>=1.4.39",
     "python-multipart>=0.0.32",
