@@ -27,6 +27,7 @@ class DogModel(LightningModule):
         lr: float = 0.001,
         batch_size: int = 32,
         test_out_dir: str = "logs/eval",
+        num_workers: int = 4,
     ):
         super().__init__()
         if lr <= 0:
@@ -50,6 +51,7 @@ class DogModel(LightningModule):
         self.val_outputs: list[dict[str, np.ndarray]] = []
         self.test_outputs: list[dict[str, np.ndarray]] = []
         self.test_out_dir = test_out_dir
+        self.num_workers = num_workers
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
         """
@@ -181,17 +183,35 @@ class DogModel(LightningModule):
     def train_dataloader(self):
         """Create the training data loader."""
         train_dataset = DogDataset(Path("data/processed/metadata.csv"), "train")
-        return torch.utils.data.DataLoader(train_dataset, self.batch_size, shuffle=True)
+        return torch.utils.data.DataLoader(
+            train_dataset,
+            self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            persistent_workers=self.num_workers > 0,
+        )
 
     def val_dataloader(self):
         """Create the validation data loader."""
         val_dataset = DogDataset(Path("data/processed/metadata.csv"), "test")
-        return torch.utils.data.DataLoader(val_dataset, self.batch_size, shuffle=False)
+        return torch.utils.data.DataLoader(
+            val_dataset,
+            self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            persistent_workers=self.num_workers > 0,
+        )
 
     def test_dataloader(self):
         """Create the test data loader."""
         test_dataset = DogDataset(Path("data/processed/metadata.csv"), "eval")
-        return torch.utils.data.DataLoader(test_dataset, self.batch_size, shuffle=False)
+        return torch.utils.data.DataLoader(
+            test_dataset,
+            self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            persistent_workers=self.num_workers > 0,
+        )
 
     def forward(self, pixel_values: torch.Tensor) -> torch.Tensor:
         """
