@@ -30,7 +30,7 @@ The directory structure of the project looks like this:
 │       ├── stage_model.yaml
 │       └── tests.yaml
 ├── configs/                  # Configuration files
-├── cloud/                     # Cloud deployment files
+├── cloud/                    # Cloud deployment files
 │   ├── cleanup_policy.json
 │   ├── cloudbuild_bentoml.yaml
 │   ├── cloudbuild_evaluate.yaml
@@ -81,7 +81,7 @@ The directory structure of the project looks like this:
 │   ├── test_data.py
 │   ├── test_model.py
 │   └── test_train.py
-├── wandb/                     # Weights and Biases files
+├── wandb/                    # Weights and Biases files
 ├── .gitignore
 ├── .pre-commit-config.yaml
 ├── .python-version
