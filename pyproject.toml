@@ -71,7 +71,7 @@ dev = [
     "pre-commit==4.6.0",
     "pytest==9.1.1",
     "ruff==0.15.20",
-    "mypy==2.1.0",
+    "mypy==2.3.0",
     "mkdocs-material==9.7.6",
     "mkdocstrings-python==2.0.5",
     "httpx>=0.28.1",
