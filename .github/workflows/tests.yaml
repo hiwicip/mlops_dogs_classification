@@ -64,6 +64,7 @@ jobs:
         env:
           BENTOML_URL: http://localhost:3000
           HAS_GCP: ${{ github.actor != 'dependabot[bot]' }}
+        shell: bash
         run: |
           if [ "$HAS_GCP" = "true" ]; then
             uv run coverage run -m pytest tests/ -v --ignore=tests/performancetests
