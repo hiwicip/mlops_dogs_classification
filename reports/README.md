@@ -148,7 +148,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 3 fill here ---
+We did use an open-source package that was not covered in the course: Hugging Face Transformers. In particular, we used the pretrained ViT model `google/vit-base-patch16-224` together with `AutoImageProcessor` and `ViTForImageClassification` to build the image classification pipeline. This helped us reuse a strong pretrained vision backbone instead of training a model from scratch.
 
 ## Coding environment
 
@@ -168,7 +168,17 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 4 fill here ---
+We used uv to manage our dependencies. All project dependencies are declared in the pyproject.toml file. The corresponding uv.lock file ensures that every team member installs exactly the same package versions. This file was was auto-generated and is updated whenever we added or removed packages from our environment. We added packages to our environment using the command `uv add <package>`.
+In the pyproject.toml file we separated dependencies into optional groups (train, serve, frontend and cloud) so that our Docker images only install the packages required for their specific purpose, reducing both image size and build time.
+Since we locally need all dependencies, we installed all optional groups with `uv sync --all-extras`. We run this command every time we added or updated a package to our environment.
+Whenever we start working on our code, we ensure being in the right virtual environment by running `source .venv/bin/activate`.
+
+To get a complete copy of our development environment, one would have to run the following commands:
+
+```bash
+uv venv --python 3.13
+uv sync --all-extras
+```
 
 ### Question 5
 
@@ -184,7 +194,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 5 fill here ---
+From the cookiecutter template we have filled out the `.github`, `configs`, `dockerfiles`, `docs`, `models`, `src` and `tests` folder. We have removed the `notebooks` folder because we did not use any notebooks in our project. We have added a `data` folder, where we store the raw and the processed data, a `cloud` folder which contains mainly cloud build files and a `logs` folder, an `output` folder and a `wandb` folder.
 
 ### Question 6
 
@@ -199,7 +209,9 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 6 fill here ---
+For linting and formatting we mainly used ruff and ruff-format. We also have some basic pre-commit hooks like trailing whitespace and end-of-file-fixer. Ruff is configured with a 120-character line limit and selects a set of rules, which we have found to be good to keep our code clean and readable. They cover pycodestyle, pyflakes, import sorting, and some additional rules.
+We also used mypy for typing and docstrings for documentation.
+These concepts are important in larger projects to maintain a clean and readable codebase. It makes it easier for team members to understand each other's code. Typing helps catch errors early in the development process and documentation helps to understand the purpose and usage of functions and classes.
 
 ## Version control
 
@@ -248,7 +260,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 9 fill here ---
+For every To-Do, we created an issue in GitHub and assigned it to a group member. The person working on the issue created a branch linked to the issue and worked on it. As soon as the work was done, a pull request was created. Linting and unit tests were run automatically and only if all passed, the pull request was stashed and merged into the main branch. The linked issue was then automatically closed. We had a ruleset for our main branch that prohibited direct commits to the main branch, which ensured that all code required creating a pull request and passing the tests before being merged. In addition, to keep our commit history clean, we required that all pull requests were squashed before merging, so we only had one commit per pull request in the main branch.
 
 ### Question 10
 
@@ -280,7 +292,11 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 11 fill here ---
+Our continuous integration is organized into 3 parts: linting, testing and automatically building our docker images.
+The linting workflow runs on every push to the main branch as well as on pull requests on the main branch. We ensured that the linting tests were also already part of our pre-commit hooks, so that we could catch linting errors before pushing code to the repository and thereby avoid failing the CI workflow.
+The testing workflow runs on pull-requests only, but since pull-requests are required to be created before merging code into the main branch, this ensures that all code is tested before being merged. The testing workflow runs on multiple operating systems (Linux, Windows and MacOS) and includes both unit tests and API tests. We also make use of caching by caching the uv downloaded cache and the huggingface model, so that we do not have to download these every time the workflow is run.
+We had 4 trigger workflows for automatically building our docker images (training image, evaluation image, backend image and frontend image). These workflows run when merges are made to the main branch, but only if the merge includes changes to the respective files that are used to build the docker images (for example changes to train.py or train.dockerfile for the training docker image).
+Moreover, we implemented two continuous Machine Learning workflows. The first runs when changes to the data are made and then comments on the pull request with some data statistics. The other workflow runs when changes to the model registry in W&B are made. If a model is tagged with the alias "staged", then the workflow will run model tests in Github Actions and if the tests pass, the model gets promoted to the alias "production" in W&B.
 
 ## Running code and tracking experiments
 
@@ -331,7 +347,15 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 14 fill here ---
+![W&B Runs](figures/wandb1.PNG)
+![W&B Logging](figures/wandb2.PNG)
+![W&B Media](figures/wandb3.PNG)
+
+We used Weights & Biases to track our experiments.
+The first images shows the last logged runs in W&B with some of the logged metrics.
+We tracked the training loss, training accuracy, validation loss and validation accuracy. Charts of these metrics can be seen in the bottom section of the second image. The training loss and accuracy inform us about how well our model is learning during training, while the validation loss and accuracy inform us about how well our model generalizes to unseen data. As seen in the both the first and the second image, some of our models had a training accuracy of 100%. Such models could be overfitting to the training data, which is why we paid more attention to the validation metrics.
+We also tracked hyperparameters like learning rate, batch size and epochs. In the upper sections of the second image we compared the validation accuracy of different runs with different hyperparameters. We did multiple hyperparameter sweeps to find the best hyperparameters for our model. Charts like these helped us to visualize the effect of different hyperparameters on the performance of our model.
+The third image shows some of the media that we logged in W&B: after each training epoch we logged a confusion matrix and a chart showing the accuracy per class. We also logged some sampled images of the input data and the corresponding model predictions and the true labels (not shown in the screenshot).
 
 ### Question 15
 
@@ -378,7 +402,16 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 17 fill here ---
+We used the following GCP services:
+- Cloud Storage: We stored our data, trained models, input-output data and drift reports in GCP buckets.
+- Secret Manager: We used Secret Manager to store API keys (like the W&B API key).
+- Service Account: We created service accounts to give our applications access to the GCP services.
+- Compute Engine: We used Compute Engine to run training jobs.
+- Vertex AI: We also used Vertex AI to train our models in the cloud. Our final model was trained in Vertex AI.
+- Artifact Registry: We stored our docker images in the artifact registry.
+- Cloud Build: We used cloud build to automatically build our docker images. We implemented a trigger workflow that automatically builds the respective docker images when changes to the according files are pushed to the main branch.
+- Cloud Run: We deployed our Backend and Frontend applications in Cloud Run.
+- Cloud Scheduler: We used Cloud Scheduler to schedule a minutely job that pings the backend application to keep it alive and avoid cold starts.
 
 ### Question 18
 
@@ -402,7 +435,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 19 fill here ---
+![GCP Bucket](figures/bucket.PNG)
 
 ### Question 20
 
@@ -411,7 +444,8 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 20 fill here ---
+![Artifact Registry](figures/artifactregistry1.PNG)
+![Artifact Registry](figures/artifactregistry2.PNG)
 
 ### Question 21
 
@@ -452,7 +486,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 23 fill here ---
+We did manage to write an API for our model. We first created a FastAPI application and also deployed it in the cloud, but later we switched to using BentoML to create a more specialized ML-deployment API.
 
 ### Question 24
 
@@ -468,7 +502,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 24 fill here ---
+We can deploy our API locally by running the command `invoke bentoml` (only the backend) or `invoke frontend` in the terminal. This will start a local server that can be accessed at `http://localhost:3000`. Our API is also deployed in the cloud using Cloud Run. The backend can be accessed at `https://dogs-bentoml-288634047169.europe-west4.run.app/` and the frontend can be accessed at `https://dogs-frontend-288634047169.europe-west4.run.app/`.
 
 ### Question 25
 
@@ -551,7 +585,12 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 29 fill here ---
+![Overview](figures/diagram.png)
+
+As starting point one could consider Kaggle where we get the data from. The `data.py` script downloads the data and preprocesses it. The data is then stored in a GCP bucket. Our model is downloaded from Huggingface. In the `model.py` script we define our model and in the `train.py` script we train our model using the train and test split of the data. Training is logged in W&B. The trained model is then stored in a GCP bucket. `evaluate.py` is used to evaluate the trained model using the validation split of the data. The evaluation is logged in W&B. The `create_onnx.py` script converts the trained model to ONNX format and stores it in a GCP bucket. `bentoml.py` is used to create an API. It's the backend of our application. We also created a frontend `frontend.py`
+All scripts are part of our local setup. For most of them we also created docker images that can be used to run the scripts in a containerized environment, either locally or in the cloud.
+Whenever we make changed to our code and want to commit them, there run pre-commit hooks locally that check for linting, typing and formatting errors. If the code passes the pre-commit hooks, it can be pushed to GitHub in a branch. If a pull request is created, the code is automatically linted and unit tested in GitHub Actions. If the code passes the tests, it can be merged into the main branch. Whenever changes are made to the main branch, the docker images are automatically built in GCP Cloud Build and stored in GCP Artifact Registry. The backend and frontend application are continuously deployed in GCP Cloud Run.
+If a user uses the frontend application, it sends a request to the backend application, which then uses the trained model to make a prediction and returns the result to the frontend application. The user can then see the result in the frontend application. The inputed image as well as the prediction with its confidence score is stored in a GCP bucket. We can locally run the drift detection script `data_drift.py` to check if the input data is drifting from the training data. The drift report is stored in a GCP bucket.
 
 ### Question 30
 
