@@ -3,8 +3,9 @@ from pathlib import Path
 
 import pytest
 import torch
-from dogs_classification.data import DogDataset
 from torch.utils.data import Dataset
+
+from dogs_classification.data import DogDataset
 
 TEST_DIR = Path(__file__).parent
 

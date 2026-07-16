@@ -137,6 +137,12 @@ class DogDataset(Dataset):
 
 
 def download_data() -> Path:
+    """
+    Download the Stanford Dogs dataset from Kaggle and copy it to the RAW_DIR.
+
+    Returns:
+        Path: The path to the downloaded raw dataset.
+    """
     cached_path = Path(kagglehub.dataset_download("jessicali9530/stanford-dogs-dataset"))
     source_dir = cached_path / "images" / "Images"
 
@@ -154,6 +160,18 @@ def download_data() -> Path:
 
 
 def preprocess(data_path: Path = RAW_DIR, output_folder: Path = PROCESSED_DIR) -> None:
+    """
+    Preprocess the Stanford Dogs dataset by splitting it into train, test, and eval sets,
+    using only the specified breeds, preprocessing the images with the AutoImageProcessor,
+    and saving the processed images to the output folder and creating a metadata CSV file.
+
+    Args:
+        data_path (Path): The path to the raw dataset.
+        output_folder (Path): The path to the folder where the processed dataset will be saved.
+
+    Returns:
+        None
+    """
     print("Preprocessing data...")
 
     data_path = download_data()
@@ -208,9 +226,7 @@ def preprocess(data_path: Path = RAW_DIR, output_folder: Path = PROCESSED_DIR) -
             shuffle=True,
         )
 
-        print(
-            f"{breed_name}: " f"{len(train_images)} train / " f"{len(eval_images)} eval / " f"{len(test_images)} test"
-        )
+        print(f"{breed_name}: {len(train_images)} train / {len(eval_images)} eval / {len(test_images)} test")
 
         for image_path in train_images:
             image = Image.open(image_path).convert("RGB")

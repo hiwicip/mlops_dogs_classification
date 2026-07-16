@@ -1,6 +1,7 @@
 import json
 from datetime import UTC, datetime
 from io import BytesIO
+from pathlib import Path
 from threading import Thread
 
 import bentoml
@@ -12,7 +13,8 @@ from prometheus_client import Counter, Histogram, Summary
 from transformers import AutoImageProcessor
 
 MODEL_NAME = "google/vit-base-patch16-224"
-ONNX_MODEL_PATH = "models/dog_classifier.onnx"
+ONNX_MODEL_PATH = Path("models/dog_classifier.onnx")
+ONNX_MODEL_GCS_PATH = "models/dog_classifier.onnx"
 BUCKET_NAME = "mlops-dog-data-euwest4"
 PROJECT_ID = "mlopsdogclassification"
 
@@ -21,9 +23,25 @@ error_counter = Counter("prediction_error", "Number of prediction errors")
 request_counter = Counter("prediction_requests", "Number of prediction requests")
 request_latency = Histogram("prediction_latency_seconds", "Prediction latency in seconds")
 image_size_summary = Summary("image_pixels", "Number of pixels in uploaded images")
+gcs_upload_error_counter = Counter("gcs_upload_error", "Number of failed prediction uploads to GCS")
 
 
-def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, confidence: float, predictions: list):
+def save_prediction(
+    timestamp: str, image: Image.Image, predicted_class: str, confidence: float, predictions: list
+) -> None:
+    """
+    Save the prediction results to Google Cloud Storage (GCS) as a JSON file.
+
+    Args:
+        timestamp (str): The timestamp of the prediction.
+        image (Image.Image): The input image.
+        predicted_class (str): The predicted class label.
+        confidence (float): The confidence score of the prediction.
+        predictions (list): The top 5 predictions with their confidence scores.
+
+    Returns:
+        None
+    """
     try:
         client = storage.Client(project=PROJECT_ID)
         bucket = client.bucket(BUCKET_NAME)
@@ -53,24 +71,59 @@ def save_prediction(timestamp: str, image: Image.Image, predicted_class: str, co
         print(f"Prediction saved to GCP bucket: {filename}")
 
     except Exception as e:
+        gcs_upload_error_counter.inc()
         print(f"Failed to save prediction: {e}")
+
+
+def _ensure_onnx_model() -> None:
+    if ONNX_MODEL_PATH.exists():
+        return
+
+    ONNX_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    client = storage.Client(project=PROJECT_ID)
+    bucket = client.bucket(BUCKET_NAME)
+
+    model_blob = bucket.blob(ONNX_MODEL_GCS_PATH)
+    model_blob.download_to_filename(ONNX_MODEL_PATH)
+
+    data_blob = bucket.blob(f"{ONNX_MODEL_GCS_PATH}.data")
+    if data_blob.exists(client):
+        data_blob.download_to_filename(ONNX_MODEL_PATH.with_suffix(".onnx.data"))
 
 
 @bentoml.service
 class DogBreedClassificationService:
+    """
+    A BentoML service for dog breed classification using a pre-trained ONNX model.
+    This service handles image preprocessing, model inference, and saving predictions to Google Cloud Storage
+    """
+
     def __init__(self):
         super().__init__()
-        # Note that the onnx must be there in order for this to work
-        self.model = InferenceSession(ONNX_MODEL_PATH)
+        _ensure_onnx_model()
+        self.model = InferenceSession(str(ONNX_MODEL_PATH))
         self.processor = AutoImageProcessor.from_pretrained(MODEL_NAME)
         with open("data/processed/classes.json") as f:
             label2id = json.load(f)
         self.idx_to_class = {idx: name for name, idx in label2id.items()}
 
     @bentoml.api
-    def predict(self, image: Image.Image) -> dict:
+    def predict(self, image: Image.Image, ctx: bentoml.Context) -> dict:
+        """
+        Perform prediction on the input image and return the top 5 predictions with their confidence scores.
+
+        Args:
+            image (Image.Image): The input image for prediction.
+            ctx (bentoml.Context): The BentoML context for the request.
+
+        Returns:
+            dict: A dictionary containing the top 5 predictions and their confidence scores."""
         request_counter.inc()
         image_size_summary.observe(image.width * image.height)
+
+        request = ctx.request
+        is_test = request.headers.get("X-Test-Request") == "true"
 
         try:
             with request_latency.time():
@@ -100,12 +153,12 @@ class DogBreedClassificationService:
 
                 timestamp = datetime.now(UTC).isoformat()
 
-                # Save prediction and image to GCP bucket in a separate thread
-                Thread(
-                    target=save_prediction,
-                    args=(timestamp, image.copy(), predicted_class, confidence, predictions),
-                    daemon=True,
-                ).start()
+                if not is_test:
+                    Thread(
+                        target=save_prediction,
+                        args=(timestamp, image.copy(), predicted_class, confidence, predictions),
+                        daemon=True,
+                    ).start()
 
                 return {
                     "predictions": predictions,

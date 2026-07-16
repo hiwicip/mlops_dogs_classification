@@ -17,12 +17,21 @@ BUCKET_NAME = "mlops-dog-data-euwest4"
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="config.yaml")
-def train(cfg: DictConfig):
+def train(cfg: DictConfig) -> None:
+    """
+    Train the dog classification model.
+
+    Args:
+        cfg (DictConfig): The configuration object containing training parameters.
+
+    Returns:
+        None
+    """
     lr = cfg.training.lr
     batch_size = cfg.training.batch_size
     epochs = cfg.training.epochs
 
-    model = DogModel(model_name=cfg.model.name, lr=lr, batch_size=batch_size)
+    model = DogModel(model_name=cfg.model.name, lr=lr, batch_size=batch_size, num_workers=8)
 
     wandb_logger = WandbLogger(
         project="dogs-classification",
@@ -76,12 +85,12 @@ def train(cfg: DictConfig):
     blob = bucket.blob(f"models/best_model_{timestamp}.pt")
     blob.upload_from_filename(model_path)
     artifact = wandb.Artifact("best_model", type="model")
-    artifact.add_reference(f"gs://{BUCKET_NAME}/models/best_model.pt")
+    artifact.add_reference(f"gs://{BUCKET_NAME}/models/best_model_{timestamp}.pt")
     logged_artifact = wandb_logger.experiment.log_artifact(artifact)
     wandb_logger.experiment.link_artifact(
         artifact=logged_artifact,
         target_path="wandb-registry-dog_models/best_models",
-        aliases=["latest"],
+        aliases=["latest", "staging"],
     )
 
     print("Uploaded model to GCS bucket and logged to WandB model registry.")

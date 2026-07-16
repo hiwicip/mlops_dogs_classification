@@ -13,7 +13,7 @@ WORKDIR /app
 COPY uv.lock uv.lock
 COPY pyproject.toml pyproject.toml
 
-RUN uv sync --frozen --no-install-project
+RUN uv sync --frozen --no-install-project --extra train --extra cloud
 
 COPY src src/
 COPY configs configs/
@@ -22,6 +22,6 @@ COPY data/processed.dvc data/processed.dvc
 COPY README.md README.md
 COPY LICENSE LICENSE
 
-RUN uv sync --frozen
+RUN uv sync --frozen --extra train --extra cloud
 
 ENTRYPOINT ["sh", "-c", "uv run dvc pull && uv run src/dogs_classification/train.py"]
