@@ -487,6 +487,8 @@ We used the following GCP services:
 > Answer:
 
 We did manage to write an API for our model. We first created a FastAPI application and also deployed it in the cloud, but later we switched to using BentoML to create a more specialized ML-deployment API.
+Our API loads an ONNX model of our trained ViT model. We decided to use ONNX because its platform agnostic and can easily be deployed with an entirely different framework and hardware. If the ONNX model is not found locally, it will be automatically downloaded from the GCP bucket.
+The API takes an image as input which is processed using Hugging Face's `AutoImageProcessor`. The processed image is then passed to the ONNX model for inference. The API returns the top five predicted dog breeds along with their confidence scores. Both the input image and the predictions are stored in a GCP bucket for later analysis. We also added a health check endpoint to the API to ensure that the service is running correctly. To improve reliability and observability, we integrated Prometheus metrics to monitor metrics like request counts, latency and error counts.
 
 ### Question 24
 
