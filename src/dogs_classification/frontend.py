@@ -100,7 +100,7 @@ def main() -> None:
                         scale=alt.Scale(domain=[0, 100]),
                         axis=alt.Axis(format=".0f", tickCount=10),
                     ),
-                    y=alt.Y("Breed:N", sort="-x"),
+                    y=alt.Y("Breed:N", sort="-x", axis=alt.Axis(labelLimit=250)),
                     color=alt.Color(
                         "is_top:N",
                         scale=alt.Scale(domain=[False, True], range=["#0d6e30", "#21c354"]),
