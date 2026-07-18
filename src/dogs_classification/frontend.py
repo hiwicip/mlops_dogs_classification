@@ -112,6 +112,9 @@ def main() -> None:
 
     with col_preview:
         if image_source is not None:
+            image = Image.open(image_source)
+            st.image(image, use_container_width=True)
+
             if st.button("Classify", type="primary", use_container_width=True):
                 image_source.seek(0)
                 try:
@@ -125,9 +128,6 @@ def main() -> None:
                     st.error("Request timed out. The service may be starting up — try again in a moment.")
                 except Exception as e:
                     st.error(f"Classification failed: {e}")
-
-            image = Image.open(image_source)
-            st.image(image, use_container_width=True)
         else:
             st.info("Your image will appear here.")
 
