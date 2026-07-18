@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -9,7 +11,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 import torch
-from dvc.api import DVCFileSystem
+import yaml
 from evidently import Report
 from evidently.presets import DataDriftPreset, DataSummaryPreset
 from google.cloud import storage
@@ -26,6 +28,9 @@ REPORT_OUTPUT_PATH = "drift_reports/drift_report_{timestamp}.html"
 METADATA_PATH = Path("data/processed/metadata.csv")
 CLASSES_FILE = Path("data/processed/classes.json")
 ONNX_MODEL_GCS_PATH = Path("models/dog_classifier.onnx")
+PROCESSED_DVC_FILE = Path("data/processed.dvc")
+PROCESSED_DIR = Path("data/processed")
+DOWNLOAD_WORKERS = 8
 
 SAMPLES_PER_CLASS = 5
 
@@ -104,18 +109,37 @@ def download_predictions_from_gcs(bucket_name: str, prefix: str, n: int | None =
     return pd.DataFrame(rows)
 
 
-def load_reference_pixel_values(reference_df: pd.DataFrame) -> torch.Tensor:
-    """Load reference pixel-value tensors, from local disk if present, else pull via DVC."""
-    fs = DVCFileSystem(".")
+@lru_cache(maxsize=1)
+def _dvc_relpath_to_md5() -> dict[str, str]:
+    """Map each file tracked under data/processed/ to its DVC content hash."""
+    with open(PROCESSED_DVC_FILE) as f:
+        out = yaml.safe_load(f)["outs"][0]
+    return {entry["relpath"]: entry["md5"] for entry in out["files"]}
 
-    pixel_values = []
-    for image_path in reference_df["image_path"].tolist():
+
+def _download_dvc_tracked_file(bucket: storage.Bucket, image_path: str, hashes: dict[str, str]) -> bytes:
+    """Fetch a single DVC-tracked file straight from the remote's content-addressed cache."""
+    relpath = str(Path(image_path).relative_to(PROCESSED_DIR))
+    md5 = hashes[relpath]
+    blob_path = f"files/md5/{md5[:2]}/{md5[2:]}"
+    return bucket.blob(blob_path).download_as_bytes()
+
+
+def load_reference_pixel_values(reference_df: pd.DataFrame) -> torch.Tensor:
+    """Load reference pixel-value tensors, from local disk if present, else from the DVC remote cache."""
+    client = storage.Client()
+    bucket = client.bucket(BUCKET_NAME)
+    hashes = _dvc_relpath_to_md5()
+
+    def _load_one(image_path: str) -> torch.Tensor:
         local = Path(image_path)
         if local.exists():
-            pixel_values.append(torch.load(local))
-        else:
-            with fs.open(image_path, mode="rb") as f:
-                pixel_values.append(torch.load(BytesIO(f.read())))
+            return torch.load(local)
+        data = _download_dvc_tracked_file(bucket, image_path, hashes)
+        return torch.load(BytesIO(data))
+
+    with ThreadPoolExecutor(max_workers=DOWNLOAD_WORKERS) as executor:
+        pixel_values = list(executor.map(_load_one, reference_df["image_path"].tolist()))
     return torch.stack(pixel_values)
 
 
@@ -137,12 +161,15 @@ def load_current_pixel_values(current_df: pd.DataFrame, bucket_name: str) -> tor
     bucket = client.bucket(bucket_name)
 
     assert processor is not None, "Call load_model_and_processor() before loading pixel values"
-    pixel_values = []
-    for image_path in current_df["image_path"].tolist():
+
+    def _load_one(image_path: str) -> torch.Tensor:
         image_bytes = bucket.blob(image_path).download_as_bytes()
         image = Image.open(BytesIO(image_bytes)).convert("RGB")
         inputs = processor(images=image, return_tensors="pt")  # type: ignore[operator]
-        pixel_values.append(inputs["pixel_values"].squeeze(0))
+        return inputs["pixel_values"].squeeze(0)
+
+    with ThreadPoolExecutor(max_workers=DOWNLOAD_WORKERS) as executor:
+        pixel_values = list(executor.map(_load_one, current_df["image_path"].tolist()))
 
     return torch.stack(pixel_values)
 
@@ -229,16 +256,35 @@ def build_reference_df() -> pd.DataFrame:
     return reference_df
 
 
-def run_analysis(reference_df: pd.DataFrame, current_df: pd.DataFrame) -> str:
+FEATURE_NAMES = ["brightness", "contrast", "sharpness"]
+
+
+def build_reference_report_df() -> pd.DataFrame:
+    """Compute the reference-side report columns once (deterministic sample => same result every time)."""
+    load_model_and_processor()
+
+    with open(CLASSES_FILE) as f:
+        class_to_idx = json.load(f)
+
+    reference_df = build_reference_df()
+    reference_df["label"] = reference_df["breed"].map(class_to_idx).astype(int)
+
+    reference_pixel_values = load_reference_pixel_values(reference_df)
+    reference_df[FEATURE_NAMES] = extract_features(reference_pixel_values)
+    reference_df["confidence"] = compute_confidence(model, reference_pixel_values.numpy())
+
+    reference_df = reference_df[["label", "confidence", *FEATURE_NAMES]]
+    reference_df["label"] = reference_df["label"].astype("category")
+    return reference_df
+
+
+def run_analysis(reference_report_df: pd.DataFrame, current_df: pd.DataFrame) -> str:
     """
-    Run the drift analysis between reference and current data and save the report to disk.
+    Run the drift analysis between the (precomputed) reference report data and current data.
 
     Returns:
         str: The local path to the saved HTML report.
     """
-    from evidently import Report
-    from evidently.presets import DataDriftPreset, DataSummaryPreset
-
     load_model_and_processor()
 
     with open(CLASSES_FILE) as f:
@@ -248,29 +294,14 @@ def run_analysis(reference_df: pd.DataFrame, current_df: pd.DataFrame) -> str:
     current_df = current_df.dropna(subset=["label"]).copy()
     current_df["label"] = current_df["label"].astype(int)
 
-    reference_df["label"] = reference_df["breed"].map(class_to_idx)
-    reference_df["label"] = reference_df["label"].astype(int)
-
-    reference_pixel_values = load_reference_pixel_values(reference_df)
     current_pixel_values = load_current_pixel_values(current_df, BUCKET_NAME)
+    current_df[FEATURE_NAMES] = extract_features(current_pixel_values)
 
-    reference_features = extract_features(reference_pixel_values)
-    current_features = extract_features(current_pixel_values)
-
-    feature_names = ["brightness", "contrast", "sharpness"]
-    reference_df[feature_names] = reference_features
-    current_df[feature_names] = current_features
-
-    reference_df["confidence"] = compute_confidence(model, reference_pixel_values.numpy())
-
-    reference_df = reference_df[["label", "confidence", *feature_names]]
-    current_df = current_df[["label", "confidence", *feature_names]]
-
-    reference_df["label"] = reference_df["label"].astype("category")
+    current_df = current_df[["label", "confidence", *FEATURE_NAMES]]
     current_df["label"] = current_df["label"].astype("category")
 
     report = Report(metrics=[DataDriftPreset(), DataSummaryPreset()])
-    result = report.run(reference_data=reference_df, current_data=current_df)
+    result = report.run(reference_data=reference_report_df, current_data=current_df)
     result.save_html(REPORT_LOCAL_PATH)
     return REPORT_LOCAL_PATH
 
@@ -282,8 +313,8 @@ def main() -> None:
         print("No predictions found in the bucket.")
         return
 
-    reference_df = build_reference_df()
-    local_path = run_analysis(reference_df, current_df)
+    reference_report_df = build_reference_report_df()
+    local_path = run_analysis(reference_report_df, current_df)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     upload_report_to_gcs(local_path, BUCKET_NAME, REPORT_OUTPUT_PATH.format(timestamp=timestamp))
