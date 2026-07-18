@@ -31,7 +31,7 @@ def train(cfg: DictConfig) -> None:
     batch_size = cfg.training.batch_size
     epochs = cfg.training.epochs
 
-    model = DogModel(model_name=cfg.model.name, lr=lr, batch_size=batch_size)
+    model = DogModel(model_name=cfg.model.name, lr=lr, batch_size=batch_size, num_workers=8)
 
     wandb_logger = WandbLogger(
         project="dogs-classification",
