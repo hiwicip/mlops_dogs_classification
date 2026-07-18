@@ -39,9 +39,15 @@ def main() -> None:
         [data-testid="stCameraInput"] video,
         [data-testid="stCameraInput"] img,
         [data-testid="stImage"] img {
-            height: 420px;
-            width: 100%;
-            object-fit: cover;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: auto !important;
+            object-fit: contain !important;
+            display: block;
+            margin: 0 auto;
+        }
+        [data-testid="stImage"] img {
+            margin-top: 48px;
         }
         </style>
         """,
@@ -57,6 +63,12 @@ def main() -> None:
         st.session_state["camera_open"] = False
     if "image_hash" not in st.session_state:
         st.session_state["image_hash"] = None
+    if "upload_hash" not in st.session_state:
+        st.session_state["upload_hash"] = None
+    if "camera_hash" not in st.session_state:
+        st.session_state["camera_hash"] = None
+    if "active_source" not in st.session_state:
+        st.session_state["active_source"] = None
 
     col_input, col_preview = st.columns(2)
 
@@ -69,16 +81,41 @@ def main() -> None:
             )
 
         with tab_camera:
+            camera_photo = None
+            if st.session_state["camera_open"]:
+                camera_photo = st.camera_input("Take a photo", label_visibility="collapsed")
+
             label = "Close Camera" if st.session_state["camera_open"] else "Open Camera"
             if st.button(label, use_container_width=True):
                 st.session_state["camera_open"] = not st.session_state["camera_open"]
                 st.rerun()
 
-            camera_photo = None
-            if st.session_state["camera_open"]:
-                camera_photo = st.camera_input("Take a photo", label_visibility="collapsed")
+        # Whichever source most recently produced a *new* image wins the preview,
+        # since both widgets keep their last value across reruns even when unused.
+        if uploaded_file is not None:
+            upload_hash = hash(uploaded_file.getvalue())
+            if upload_hash != st.session_state["upload_hash"]:
+                st.session_state["upload_hash"] = upload_hash
+                st.session_state["active_source"] = "upload"
+        elif st.session_state["active_source"] == "upload":
+            st.session_state["upload_hash"] = None
+            st.session_state["active_source"] = None
 
-        image_source = uploaded_file or camera_photo
+        if camera_photo is not None:
+            camera_hash = hash(camera_photo.getvalue())
+            if camera_hash != st.session_state["camera_hash"]:
+                st.session_state["camera_hash"] = camera_hash
+                st.session_state["active_source"] = "camera"
+        elif st.session_state["active_source"] == "camera":
+            st.session_state["camera_hash"] = None
+            st.session_state["active_source"] = None
+
+        if st.session_state["active_source"] == "camera":
+            image_source = camera_photo
+        elif st.session_state["active_source"] == "upload":
+            image_source = uploaded_file
+        else:
+            image_source = uploaded_file or camera_photo
 
         # disclaimer that images will be saved
         st.info("⚠️ Disclaimer: Uploaded images will be saved for monitoring. ")
