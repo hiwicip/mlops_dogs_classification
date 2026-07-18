@@ -209,9 +209,8 @@ From the cookiecutter template we have filled out the `.github`, `configs`, `doc
 >
 > Answer:
 
-For linting and formatting we mainly used ruff and ruff-format. We also have some basic pre-commit hooks like trailing whitespace and end-of-file-fixer. Ruff is configured with a 120-character line limit and selects a set of rules, which we have found to be good to keep our code clean and readable. They cover pycodestyle, pyflakes, import sorting, and some additional rules.
-We also used mypy for typing and docstrings for documentation.
-These concepts are important in larger projects to maintain a clean and readable codebase. It makes it easier for team members to understand each other's code. Typing helps catch errors early in the development process and documentation helps to understand the purpose and usage of functions and classes.
+We used ruff for linting and ruff-format for formatting, wired up as pre-commit hooks alongside some smaller checks like trailing-whitespace and end-of-file-fixer, so issues get caught before a commit even lands rather than in review. We capped lines at 120 characters and enabled rule sets for pycodestyle, pyflakes, import sorting and a few others that we found actually useful rather than noisy. On top of that, we used mypy for static typing and docstrings for documentation.
+None of this is just box-ticking — on a group project like this, everyone is touching the same codebase without knowing every corner of it, so a consistent style saves you from re-learning formatting quirks every time you open someone else's file. Typing is arguably even more valuable: it turns a whole class of bugs (wrong argument passed, `None` used where a tensor was expected) into an error at edit time instead of a crash three functions deep during training. Docstrings do the same job for intent — they save the next person from having to reverse-engineer *why* a function exists just to use it correctly.
 
 ## Version control
 
@@ -230,7 +229,7 @@ These concepts are important in larger projects to maintain a clean and readable
 >
 > Answer:
 
---- question 7 fill here ---
+In total we have implemented 26 tests across four files. `test_data.py` (7 tests) checks that `DogDataset` loads samples correctly, handles splits, and returns items with the expected keys, shapes and types. `test_model.py` (10 tests) covers model instantiation, forward-pass output shape/dtype, absence of NaNs, gradient flow, parameter count, and that invalid hyperparameters or input shapes raise errors. `test_train.py` (4 tests) verifies that a Lightning training step actually updates weights, that checkpointing monitors `val_loss` correctly, and that the best model gets uploaded to GCS. `test_bentoml.py` (5 tests) are integration tests against the deployed BentoML `/predict` endpoint, checking liveness, response schema and confidence ranges.
 
 ### Question 8
 
