@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 import anyio
 import pandas as pd
 from fastapi import FastAPI
@@ -12,7 +14,8 @@ from dogs_classification.data_drift import (
 )
 
 
-def lifespan(app: FastAPI):
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """Load the reference data before the application starts."""
     global reference_data
     reference_data = build_reference_df()
