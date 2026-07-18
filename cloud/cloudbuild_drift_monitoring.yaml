@@ -1,0 +1,39 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Pull previous drift monitoring image'
+  entrypoint: 'bash'
+  args: ['-c', 'docker pull europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-drift-monitoring:latest || exit 0']
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build drift monitoring image'
+  env:
+    - 'DOCKER_BUILDKIT=1'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-drift-monitoring:latest',
+    '--cache-from',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-drift-monitoring:latest',
+    '--build-arg',
+    'BUILDKIT_INLINE_CACHE=1',
+    '-f',
+    'dockerfiles/drift_monitoring_api.dockerfile'
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push drift monitoring image'
+  args: [
+    'push',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-drift-monitoring:latest'
+  ]
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy to Cloud Run'
+  args: [
+    'gcloud', 'run', 'deploy', 'dogs-drift-monitoring',
+    '--image', 'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-drift-monitoring:latest',
+    '--region', 'europe-west4',
+    '--project', 'mlopsdogclassification',
+    '--platform', 'managed',
+    '--port', '8080'
+  ]
+options:
+  logging: CLOUD_LOGGING_ONLY
