@@ -130,7 +130,7 @@ def load_current_pixel_values(current_df: pd.DataFrame, bucket_name: str) -> tor
     for image_path in current_df["image_path"].tolist():
         image_bytes = bucket.blob(image_path).download_as_bytes()
         image = Image.open(BytesIO(image_bytes)).convert("RGB")
-        inputs = processor(images=image, return_tensors="pt")
+        inputs = processor(images=image, return_tensors="pt")  # type: ignore[operator]
         pixel_values.append(inputs["pixel_values"].squeeze(0))
 
     return torch.stack(pixel_values)
