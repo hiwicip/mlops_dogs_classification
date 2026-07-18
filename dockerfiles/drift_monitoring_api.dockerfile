@@ -19,7 +19,7 @@ RUN mkdir -p models
 
 RUN uv sync --frozen --extra drift --extra cloud --extra-index-url https://download.pytorch.org/whl/cpu
 
-RUN uv run dvc config core.no_scm true && uv run dvc pull data/processed
+RUN uv run dvc config core.no_scm true
 
 EXPOSE $PORT
 
