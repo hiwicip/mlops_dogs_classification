@@ -38,14 +38,15 @@ def load_latest_files(n: int) -> pd.DataFrame:
 @app.get("/report")
 async def get_report(n: int = 10):
     """Generate and return the drift report."""
-    if reference_data is None:
+    ref_data = reference_data
+    if ref_data is None:
         return HTMLResponse(content="<h1>Reference data not loaded.</h1>", status_code=503)
 
     prediction_data = load_latest_files(n=n)
     if prediction_data.empty:
         return HTMLResponse(content="<h1>No predictions found in the bucket.</h1>", status_code=200)
 
-    local_path = run_analysis(reference_data.copy(), prediction_data)
+    local_path = run_analysis(ref_data.copy(), prediction_data)
 
     async with await anyio.open_file(local_path, encoding="utf-8") as f:
         html_content = await f.read()
