@@ -33,6 +33,21 @@ def main() -> None:
     st.set_page_config(page_title="Dog Breed Classifier", page_icon="🐶", layout="wide")
     st.title("🐶 Dog Breed Classifier")
 
+    st.markdown(
+        """
+        <style>
+        [data-testid="stCameraInput"] video,
+        [data-testid="stCameraInput"] img,
+        [data-testid="stImage"] img {
+            height: 420px;
+            width: 100%;
+            object-fit: cover;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     BACKEND_URL = get_backend_url()
     if not BACKEND_URL:
         st.error("Backend service not found. Please check your configuration.")
