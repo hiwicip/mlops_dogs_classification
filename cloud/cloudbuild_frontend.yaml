@@ -1,11 +1,21 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
+  id: 'Pull previous frontend image'
+  entrypoint: 'bash'
+  args: ['-c', 'docker pull europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-frontend:latest || exit 0']
+- name: 'gcr.io/cloud-builders/docker'
   id: 'Build frontend image'
+  env:
+    - 'DOCKER_BUILDKIT=1'
   args: [
     'build',
     '.',
     '-t',
     'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-frontend:latest',
+    '--cache-from',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-frontend:latest',
+    '--build-arg',
+    'BUILDKIT_INLINE_CACHE=1',
     '-f',
     'dockerfiles/frontend.dockerfile'
   ]

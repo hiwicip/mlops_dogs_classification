@@ -4,12 +4,22 @@ steps:
   entrypoint: 'bash'
   args: ['-c', 'mkdir -p models && gsutil cp gs://mlops-dog-data-euwest4/models/dog_classifier.onnx* models/']
 - name: 'gcr.io/cloud-builders/docker'
+  id: 'Pull previous bentoml image'
+  entrypoint: 'bash'
+  args: ['-c', 'docker pull europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest || exit 0']
+- name: 'gcr.io/cloud-builders/docker'
   id: 'Build bentoml image'
+  env:
+    - 'DOCKER_BUILDKIT=1'
   args: [
     'build',
     '.',
     '-t',
     'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest',
+    '--cache-from',
+    'europe-west4-docker.pkg.dev/mlopsdogclassification/mlops-dog-classification/dogs-bentoml:latest',
+    '--build-arg',
+    'BUILDKIT_INLINE_CACHE=1',
     '-f',
     'dockerfiles/bentoml.dockerfile'
   ]
