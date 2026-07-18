@@ -23,4 +23,4 @@ RUN uv run dvc config core.no_scm true && uv run dvc pull data/processed
 
 EXPOSE $PORT
 
-CMD exec uv run uvicorn dogs_classification.drift_monitoring_api:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1
+CMD uv run dvc pull data/processed/metadata.csv && exec uv run uvicorn dogs_classification.drift_monitoring_api:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1

@@ -8,6 +8,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
+import torch
+from dvc.api import DVCFileSystem
+from evidently import Report
+from evidently.presets import DataDriftPreset, DataSummaryPreset
 from google.cloud import storage
 
 if TYPE_CHECKING:
@@ -101,11 +105,8 @@ def download_predictions_from_gcs(bucket_name: str, prefix: str, n: int | None =
 
 
 def load_reference_pixel_values(reference_df: pd.DataFrame) -> torch.Tensor:
-    """Load reference pixel-value tensors, from local disk if present, else from GCS."""
-    import torch
-
-    client = storage.Client()
-    bucket = client.bucket(BUCKET_NAME)
+    """Load reference pixel-value tensors, from local disk if present, else pull via DVC."""
+    fs = DVCFileSystem(".")
 
     pixel_values = []
     for image_path in reference_df["image_path"].tolist():
@@ -113,8 +114,8 @@ def load_reference_pixel_values(reference_df: pd.DataFrame) -> torch.Tensor:
         if local.exists():
             pixel_values.append(torch.load(local))
         else:
-            data = bucket.blob(image_path).download_as_bytes()
-            pixel_values.append(torch.load(BytesIO(data)))
+            with fs.open(image_path, mode="rb") as f:
+                pixel_values.append(torch.load(BytesIO(f.read())))
     return torch.stack(pixel_values)
 
 
