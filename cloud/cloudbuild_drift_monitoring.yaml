@@ -33,7 +33,8 @@ steps:
     '--region', 'europe-west4',
     '--project', 'mlopsdogclassification',
     '--platform', 'managed',
-    '--port', '8080'
+    '--port', '8080',
+    '--memory', '4Gi'
   ]
 options:
   logging: CLOUD_LOGGING_ONLY

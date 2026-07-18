@@ -19,8 +19,8 @@ RUN mkdir -p models
 
 RUN uv sync --frozen --extra serve --extra cloud --extra-index-url https://download.pytorch.org/whl/cpu
 
-RUN uv run dvc config core.no_scm true
+RUN uv run dvc config core.no_scm true && uv run dvc pull data/processed
 
 EXPOSE $PORT
 
-CMD uv run dvc pull data/processed && exec uv run uvicorn dogs_classification.drift_monitoring_api:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1
+CMD exec uv run uvicorn dogs_classification.drift_monitoring_api:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1

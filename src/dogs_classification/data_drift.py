@@ -1,17 +1,19 @@
+from __future__ import annotations
+
 import json
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-import torch
-from evidently import Report
-from evidently.presets import DataDriftPreset, DataSummaryPreset
 from google.cloud import storage
-from onnxruntime import InferenceSession
-from PIL import Image
-from transformers import AutoImageProcessor
+
+if TYPE_CHECKING:
+    import torch
+    from onnxruntime import InferenceSession
+    from transformers import AutoImageProcessor
 
 BUCKET_NAME = "mlops-dog-data-euwest4"
 PREDICTIONS_PREFIX = "predictions/"
@@ -42,6 +44,9 @@ def download_onnx_from_gcs() -> None:
 
 def load_model_and_processor() -> None:
     """Load the ONNX model and image processor into module globals if not already loaded."""
+    from onnxruntime import InferenceSession
+    from transformers import AutoImageProcessor
+
     global processor, model
     if processor is None:
         processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224")
@@ -97,6 +102,8 @@ def download_predictions_from_gcs(bucket_name: str, prefix: str, n: int | None =
 
 def load_reference_pixel_values(reference_df: pd.DataFrame) -> torch.Tensor:
     """Load reference pixel-value tensors, from local disk if present, else from GCS."""
+    import torch
+
     client = storage.Client()
     bucket = client.bucket(BUCKET_NAME)
 
@@ -122,6 +129,9 @@ def load_current_pixel_values(current_df: pd.DataFrame, bucket_name: str) -> tor
     Returns:
         torch.Tensor: A tensor containing the pixel values of the current images.
     """
+    import torch
+    from PIL import Image
+
     client = storage.Client()
     bucket = client.bucket(bucket_name)
 
@@ -225,6 +235,9 @@ def run_analysis(reference_df: pd.DataFrame, current_df: pd.DataFrame) -> str:
     Returns:
         str: The local path to the saved HTML report.
     """
+    from evidently import Report
+    from evidently.presets import DataDriftPreset, DataSummaryPreset
+
     load_model_and_processor()
 
     with open(CLASSES_FILE) as f:
