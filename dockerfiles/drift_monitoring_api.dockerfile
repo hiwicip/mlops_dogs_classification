@@ -5,7 +5,7 @@ WORKDIR /app
 COPY uv.lock uv.lock
 COPY pyproject.toml pyproject.toml
 
-RUN uv sync --frozen --no-install-project --extra serve --extra cloud --extra-index-url https://download.pytorch.org/whl/cpu
+RUN uv sync --frozen --no-install-project --extra drift --extra cloud --extra-index-url https://download.pytorch.org/whl/cpu
 
 COPY src src/
 COPY data/processed/classes.json data/processed/classes.json
@@ -17,7 +17,7 @@ COPY data/processed.dvc data/processed.dvc
 
 RUN mkdir -p models
 
-RUN uv sync --frozen --extra serve --extra cloud --extra-index-url https://download.pytorch.org/whl/cpu
+RUN uv sync --frozen --extra drift --extra cloud --extra-index-url https://download.pytorch.org/whl/cpu
 
 RUN uv run dvc config core.no_scm true && uv run dvc pull data/processed
 
