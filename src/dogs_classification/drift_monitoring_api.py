@@ -8,17 +8,17 @@ from fastapi.responses import HTMLResponse
 from dogs_classification.data_drift import (
     BUCKET_NAME,
     PREDICTIONS_PREFIX,
-    build_reference_report_df,
     download_predictions_from_gcs,
+    load_or_build_reference_report_df,
     run_analysis,
 )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Compute the reference report data once before the application starts serving requests."""
+    """Load (or compute and cache) the reference report before the application starts."""
     global reference_report_df
-    reference_report_df = build_reference_report_df()
+    reference_report_df = load_or_build_reference_report_df()
 
     yield
 

@@ -18,13 +18,14 @@ class DogFanatic(HttpUser):
     wait_time = between(1, 2)
 
     @task
-    def get_root(self) -> None:
-        """A task that simulates a user visiting the root URL of the FastAPI app."""
-        self.client.get("/")
+    def get_livez(self) -> None:
+        """A task that hits the BentoML service's liveness endpoint."""
+        self.client.get("/livez")
 
     @task(3)
     def predict(self) -> None:
         self.client.post(
             "/predict",
-            files={"file": ("dog.jpg", make_image_bytes(), "image/jpeg")},
+            files={"image": ("dog.jpg", make_image_bytes(), "image/jpeg")},
+            headers={"X-Test-Request": "true"},
         )
