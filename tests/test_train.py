@@ -46,16 +46,6 @@ def test_training_step_runs(model):
     trainer.fit(model)
 
 
-# def test_loss_decreases(model):
-#    """Training loss should decrease when repeatedly fitting the same single batch."""
-#    trainer = Trainer(max_epochs=5, overfit_batches=1, logger=False, enable_checkpointing=False)
-#    trainer.fit(model)
-#    # Random baseline for 80 classes ≈ log(80) ≈ 4.38; after 5 steps it must be lower
-#    assert (
-#        trainer.callback_metrics["train_loss"].item() < torch.log(torch.tensor(80.0)).item()
-#    ), "Loss did not decrease below random baseline after 5 epochs on a fixed batch"
-
-
 def test_parameters_updated(model):
     """At least one parameter tensor should change after a single Trainer step."""
     params_before = [p.data.clone() for p in model.parameters()]
@@ -65,17 +55,6 @@ def test_parameters_updated(model):
     assert any(not torch.equal(before, after) for before, after in zip(params_before, params_after, strict=True)), (
         "No parameters changed after a training step — optimizer may not be updating weights"
     )
-
-
-# def test_overfit_one_batch(model):
-#    """Model should memorise a single batch — confirms sufficient model capacity."""
-#    trainer = Trainer(max_epochs=30, overfit_batches=1, logger=False, enable_checkpointing=False)
-#    trainer.fit(model)
-#    final_loss = trainer.callback_metrics["train_loss"].item()
-#    random_loss = torch.log(torch.tensor(80.0)).item()
-#    assert (
-#        final_loss < random_loss * 0.5
-#    ), f"Model failed to overfit: final={final_loss:.4f}, random baseline={random_loss:.4f}"
 
 
 # --- train.py structure tests (verify setup without running real training) ---

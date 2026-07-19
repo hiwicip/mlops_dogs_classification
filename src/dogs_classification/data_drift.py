@@ -1,30 +1,71 @@
+from __future__ import annotations
+
+import hashlib
 import json
-import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 import torch
+import yaml
 from evidently import Report
 from evidently.presets import DataDriftPreset, DataSummaryPreset
 from google.cloud import storage
-from onnxruntime import InferenceSession
-from PIL import Image
-from transformers import AutoImageProcessor
+
+if TYPE_CHECKING:
+    import torch
+    from onnxruntime import InferenceSession
+    from transformers import AutoImageProcessor
 
 BUCKET_NAME = "mlops-dog-data-euwest4"
 PREDICTIONS_PREFIX = "predictions/"
+REPORT_LOCAL_PATH = "monitoring.html"
 REPORT_OUTPUT_PATH = "drift_reports/drift_report_{timestamp}.html"
 METADATA_PATH = Path("data/processed/metadata.csv")
 CLASSES_FILE = Path("data/processed/classes.json")
-ONNX_MODEL_PATH = Path("models/dog_classifier.onnx")
+ONNX_MODEL_GCS_PATH = Path("models/dog_classifier.onnx")
+PROCESSED_DVC_FILE = Path("data/processed.dvc")
+PROCESSED_DIR = Path("data/processed")
+DOWNLOAD_WORKERS = 8
+REFERENCE_REPORT_CACHE_PREFIX = "drift_reference/"
 
 SAMPLES_PER_CLASS = 5
+FEATURE_NAMES = ["brightness", "contrast", "sharpness"]
 
-processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224")
-model = InferenceSession(ONNX_MODEL_PATH)
+processor: AutoImageProcessor | None = None
+model: InferenceSession | None = None
+
+
+def download_onnx_from_gcs() -> None:
+    """Download the ONNX model and its external-data sidecar from GCS to the local path."""
+    client = storage.Client()
+    bucket = client.bucket(BUCKET_NAME)
+    ONNX_MODEL_GCS_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    # Downloads both dog_classifier.onnx and dog_classifier.onnx.data
+    for blob in bucket.list_blobs(prefix=str(ONNX_MODEL_GCS_PATH)):
+        destination = ONNX_MODEL_GCS_PATH.parent / Path(blob.name).name
+        blob.download_to_filename(str(destination))
+        print(f"Downloaded gs://{BUCKET_NAME}/{blob.name} -> {destination}")
+
+
+def load_model_and_processor() -> None:
+    """Load the ONNX model and image processor into module globals if not already loaded."""
+    from onnxruntime import InferenceSession
+    from transformers import AutoImageProcessor
+
+    global processor, model
+    if processor is None:
+        processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224")
+    if model is None:
+        if not ONNX_MODEL_GCS_PATH.exists():
+            download_onnx_from_gcs()
+        model = InferenceSession(str(ONNX_MODEL_GCS_PATH))
 
 
 # def get_vit_embeddings(pixel_values: torch.Tensor):
@@ -34,38 +75,32 @@ model = InferenceSession(ONNX_MODEL_PATH)
 #     return embeddings.cpu().numpy()
 
 
-def download_predictions_from_gcs(bucket_name: str, prefix: str) -> pd.DataFrame:
-    """
-    Download prediction JSON files from Google Cloud Storage (GCS) and return a DataFrame containing the predictions.
+def download_predictions_from_gcs(bucket_name: str, prefix: str, n: int | None = None) -> pd.DataFrame:
+    """Download prediction JSON files from GCS and return them as a DataFrame.
 
     Args:
-        bucket_name (str): The name of the GCS bucket.
-        prefix (str): The prefix for the prediction files in the GCS bucket.
+        bucket_name: The name of the GCS bucket.
+        prefix: The prefix for the prediction files in the GCS bucket.
+        n: If given, only the latest n prediction files are used.
 
     Returns:
-        pd.DataFrame: A DataFrame containing columns for image path, predicted class, and confidence.
+        A DataFrame with image path, predicted class, and confidence.
     """
     client = storage.Client()
     bucket = client.bucket(bucket_name)
-    blobs = list(bucket.list_blobs(prefix=prefix))
+    blobs = [b for b in bucket.list_blobs(prefix=prefix) if b.name.endswith(".json")]
+
+    if n is not None:
+        blobs = sorted(blobs, key=lambda b: b.updated, reverse=True)[:n]
 
     rows = []
-
     for blob in blobs:
-        if not blob.name.endswith(".json"):
-            continue
-
         content = blob.download_as_string()
         data = json.loads(content)
-
         image_path = data["image_path"]
-
-        # Prüfen, ob das referenzierte Bild existiert
-        image_blob = bucket.blob(image_path)
-        if not image_blob.exists(client):
+        if not bucket.blob(image_path).exists(client):
             print(f"Skipping prediction because image is missing: {image_path}")
             continue
-
         rows.append(
             {
                 "image_path": image_path,
@@ -77,17 +112,37 @@ def download_predictions_from_gcs(bucket_name: str, prefix: str) -> pd.DataFrame
     return pd.DataFrame(rows)
 
 
+@lru_cache(maxsize=1)
+def _dvc_relpath_to_md5() -> dict[str, str]:
+    """Map each file tracked under data/processed/ to its DVC content hash."""
+    with open(PROCESSED_DVC_FILE) as f:
+        out = yaml.safe_load(f)["outs"][0]
+    return {entry["relpath"]: entry["md5"] for entry in out["files"]}
+
+
+def _download_dvc_tracked_file(bucket: storage.Bucket, image_path: str, hashes: dict[str, str]) -> bytes:
+    """Fetch a single DVC-tracked file straight from the remote's content-addressed cache."""
+    relpath = str(Path(image_path).relative_to(PROCESSED_DIR))
+    md5 = hashes[relpath]
+    blob_path = f"files/md5/{md5[:2]}/{md5[2:]}"
+    return bucket.blob(blob_path).download_as_bytes()
+
+
 def load_reference_pixel_values(reference_df: pd.DataFrame) -> torch.Tensor:
-    """
-    Load pixel values for the reference dataset from the local file system.
+    """Load reference pixel-value tensors, from local disk if present, else from the DVC remote cache."""
+    client = storage.Client()
+    bucket = client.bucket(BUCKET_NAME)
+    hashes = _dvc_relpath_to_md5()
 
-    Args:
-        reference_df (pd.DataFrame): A DataFrame containing the reference dataset with image paths.
+    def _load_one(image_path: str) -> torch.Tensor:
+        local = Path(image_path)
+        if local.exists():
+            return torch.load(local)
+        data = _download_dvc_tracked_file(bucket, image_path, hashes)
+        return torch.load(BytesIO(data))
 
-    Returns:
-        torch.Tensor: A tensor containing the pixel values of the reference images.
-    """
-    pixel_values = [torch.load(image_path) for image_path in reference_df["image_path"].tolist()]
+    with ThreadPoolExecutor(max_workers=DOWNLOAD_WORKERS) as executor:
+        pixel_values = list(executor.map(_load_one, reference_df["image_path"].tolist()))
     return torch.stack(pixel_values)
 
 
@@ -102,15 +157,22 @@ def load_current_pixel_values(current_df: pd.DataFrame, bucket_name: str) -> tor
     Returns:
         torch.Tensor: A tensor containing the pixel values of the current images.
     """
+    import torch
+    from PIL import Image
+
     client = storage.Client()
     bucket = client.bucket(bucket_name)
 
-    pixel_values = []
-    for image_path in current_df["image_path"].tolist():
+    assert processor is not None, "Call load_model_and_processor() before loading pixel values"
+
+    def _load_one(image_path: str) -> torch.Tensor:
         image_bytes = bucket.blob(image_path).download_as_bytes()
         image = Image.open(BytesIO(image_bytes)).convert("RGB")
-        inputs = processor(images=image, return_tensors="pt")
-        pixel_values.append(inputs["pixel_values"].squeeze(0))
+        inputs = processor(images=image, return_tensors="pt")  # type: ignore[operator]
+        return inputs["pixel_values"].squeeze(0)
+
+    with ThreadPoolExecutor(max_workers=DOWNLOAD_WORKERS) as executor:
+        pixel_values = list(executor.map(_load_one, current_df["image_path"].tolist()))
 
     return torch.stack(pixel_values)
 
@@ -185,12 +247,8 @@ def upload_report_to_gcs(local_path: str, bucket_name: str, destination_path: st
     print(f"Drift report uploaded to gs://{bucket_name}/{destination_path}")
 
 
-def main() -> None:
-    """
-    Main function to perform data drift analysis between the reference dataset and the current predictions.
-    It downloads the predictions from GCS, loads the reference and current pixel values, extracts features,
-    computes confidence scores, and generates a drift report which is then uploaded to GCS.
-    """
+def build_reference_df() -> pd.DataFrame:
+    """Build the reference dataframe from the processed metadata (train split, sampled per class)."""
     reference_df = pd.read_csv(METADATA_PATH)
     reference_df = reference_df[reference_df["split"] == "train"].reset_index(drop=True)
     reference_df = (
@@ -198,12 +256,69 @@ def main() -> None:
         .apply(lambda x: x.sample(min(len(x), SAMPLES_PER_CLASS), random_state=42))
         .reset_index(drop=True)
     )
+    return reference_df
 
-    current_df = download_predictions_from_gcs(BUCKET_NAME, PREDICTIONS_PREFIX)
 
-    if current_df.empty:
-        print("No predictions found in the bucket.")
-        return
+def build_reference_report_df() -> pd.DataFrame:
+    """Compute the reference-side report columns (features + confidence) from scratch.
+
+    This is the CPU-heavy part (image loading + ONNX inference over the whole reference
+    sample), so callers should go through load_or_build_reference_report_df() to avoid
+    redoing it on every cold start.
+    """
+    load_model_and_processor()
+
+    with open(CLASSES_FILE) as f:
+        class_to_idx = json.load(f)
+
+    reference_df = build_reference_df()
+    reference_df["label"] = reference_df["breed"].map(class_to_idx).astype(int)
+
+    reference_pixel_values = load_reference_pixel_values(reference_df)
+    reference_df[FEATURE_NAMES] = extract_features(reference_pixel_values)
+    reference_df["confidence"] = compute_confidence(model, reference_pixel_values.numpy())
+
+    reference_df = reference_df[["label", "confidence", *FEATURE_NAMES]]
+    reference_df["label"] = reference_df["label"].astype("category")
+    return reference_df
+
+
+def _reference_report_cache_blob_name() -> str:
+    """Content-hash-based cache key so the cache self-invalidates when the reference data changes."""
+    digest = hashlib.md5(METADATA_PATH.read_bytes()).hexdigest()
+    return f"{REFERENCE_REPORT_CACHE_PREFIX}reference_report_{digest}.parquet"
+
+
+def load_or_build_reference_report_df() -> pd.DataFrame:
+    """Load the cached reference report from GCS, computing and caching it if missing."""
+    client = storage.Client()
+    bucket = client.bucket(BUCKET_NAME)
+    blob = bucket.blob(_reference_report_cache_blob_name())
+
+    if blob.exists(client):
+        print(f"Loading cached reference report from gs://{BUCKET_NAME}/{blob.name}")
+        return pd.read_parquet(BytesIO(blob.download_as_bytes()))
+
+    print("No cached reference report found, computing it now")
+    reference_report_df = build_reference_report_df()
+
+    buffer = BytesIO()
+    reference_report_df.to_parquet(buffer, index=False)
+    buffer.seek(0)
+    blob.upload_from_file(buffer, content_type="application/octet-stream")
+    print(f"Cached reference report to gs://{BUCKET_NAME}/{blob.name}")
+
+    return reference_report_df
+
+
+def run_analysis(reference_report_df: pd.DataFrame, current_df: pd.DataFrame) -> str:
+    """
+    Run the drift analysis between the (precomputed) reference report data and current data.
+
+    Returns:
+        str: The local path to the saved HTML report.
+    """
+    load_model_and_processor()
 
     with open(CLASSES_FILE) as f:
         class_to_idx = json.load(f)
@@ -212,67 +327,30 @@ def main() -> None:
     current_df = current_df.dropna(subset=["label"]).copy()
     current_df["label"] = current_df["label"].astype(int)
 
-    reference_df["label"] = reference_df["breed"].map(class_to_idx)
-    reference_df["label"] = reference_df["label"].astype(int)
-
-    if current_df.empty:
-        print("No usable predictions found in the bucket.")
-        return
-
-    reference_pixel_values = load_reference_pixel_values(reference_df)
     current_pixel_values = load_current_pixel_values(current_df, BUCKET_NAME)
+    current_df[FEATURE_NAMES] = extract_features(current_pixel_values)
 
-    reference_features = extract_features(reference_pixel_values)
-    current_features = extract_features(current_pixel_values)
-
-    feature_names = ["brightness", "contrast", "sharpness"]
-
-    reference_df[feature_names] = reference_features
-    current_df[feature_names] = current_features
-
-    # Compute confidence for reference data
-    reference_confidence = compute_confidence(model, reference_pixel_values.numpy())
-    reference_df["confidence"] = reference_confidence
-
-    # only keep the relevant columns for the drift report
-    reference_df = reference_df[["label", "confidence", *feature_names]]
-    current_df = current_df[["label", "confidence", *feature_names]]
-
-    # change label column to categorical for the drift report
-    reference_df["label"] = reference_df["label"].astype("category")
+    current_df = current_df[["label", "confidence", *FEATURE_NAMES]]
     current_df["label"] = current_df["label"].astype("category")
 
     report = Report(metrics=[DataDriftPreset(), DataSummaryPreset()])
-    eval = report.run(reference_data=reference_df, current_data=current_df)
+    result = report.run(reference_data=reference_report_df, current_data=current_df)
+    result.save_html(REPORT_LOCAL_PATH)
+    return REPORT_LOCAL_PATH
 
-    # reference_embeddings = get_vit_embeddings(reference_pixel_values)
-    # current_embeddings = get_vit_embeddings(current_pixel_values)
 
-    # reference_embed_df = pd.DataFrame(
-    #     reference_embeddings, columns=[f"dim_{i}" for i in range(reference_embeddings.shape[1])]
-    # )
-    # reference_embed_df["label"] = reference_df["label"].values
+def main() -> None:
+    """Generate a drift report from the latest predictions and upload it to GCS."""
+    current_df = download_predictions_from_gcs(BUCKET_NAME, PREDICTIONS_PREFIX)
+    if current_df.empty:
+        print("No predictions found in the bucket.")
+        return
 
-    # current_embed_df = pd.DataFrame(
-    #     current_embeddings, columns=[f"dim_{i}" for i in range(current_embeddings.shape[1])]
-    # )
-    # current_embed_df["label"] = current_df["label"].values
+    reference_report_df = load_or_build_reference_report_df()
+    local_path = run_analysis(reference_report_df, current_df)
 
-    # reference_embed_df["embedding_mean"] = reference_embeddings.mean(axis=1)
-    # current_embed_df["embedding_mean"] = current_embeddings.mean(axis=1)
-
-    # embedding_columns = [column for column in reference_embed_df.columns if column.startswith("dim_")]
-    # reference_embed_df = reference_embed_df[["label", "embedding_mean", *embedding_columns]]
-    # current_embed_df = current_embed_df[["label", "embedding_mean", *embedding_columns]]
-
-    # report = Report(metrics=[DataDriftPreset(threshold=0.7)])
-    # eval = report.run(reference_data=reference_embed_df, current_data=current_embed_df)
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp:
-        eval.save_html(tmp.name)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        gcs_report_path = REPORT_OUTPUT_PATH.format(timestamp=timestamp)
-        upload_report_to_gcs(tmp.name, BUCKET_NAME, gcs_report_path)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    upload_report_to_gcs(local_path, BUCKET_NAME, REPORT_OUTPUT_PATH.format(timestamp=timestamp))
 
 
 if __name__ == "__main__":

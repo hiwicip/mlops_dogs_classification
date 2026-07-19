@@ -102,7 +102,7 @@ def docker_build(
 @task
 def docker_run(ctx: Context, image: str) -> None:
     """Run docker containers."""
-    ctx.run(f"docker run -rm {image}", echo=True, pty=not WINDOWS)
+    ctx.run(f"docker run --rm {image}", echo=True, pty=not WINDOWS)
 
 
 @task
