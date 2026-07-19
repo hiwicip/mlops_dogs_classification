@@ -98,8 +98,8 @@ will check the repositories and the code to verify your answers.
 ### Week 3
 
 * [X] Check how robust your model is towards data drifting (M27)
-* [ ] Setup collection of input-output data from your deployed application (M27)
-* [ ] Deploy to the cloud a drift detection API (M27)
+* [X] Setup collection of input-output data from your deployed application (M27)
+* [X] Deploy to the cloud a drift detection API (M27)
 * [X] Instrument your API with a couple of system metrics (M28)
 * [ ] Setup cloud monitoring of your instrumented application (M28)
 * [ ] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
@@ -194,7 +194,9 @@ uv sync --all-extras
 >
 > Answer:
 
-From the cookiecutter template we have filled out the `.github`, `configs`, `dockerfiles`, `docs`, `models`, `src` and `tests` folder. We have removed the `notebooks` folder because we did not use any notebooks in our project. We have added a `data` folder, where we store the raw and the processed data, a `cloud` folder which contains mainly cloud build files and a `logs` folder, an `output` folder and a `wandb` folder.
+From the cookiecutter template we have filled out the `.github`, `configs`, `dockerfiles`, `docs`, `models`, `src` and `tests` folders. We removed the `notebooks` folder because we did not use any notebooks in our project. We added a `data` folder for the raw and processed data, a `cloud` folder that mainly contains cloud build files, and also a `logs`, `outputs` and `wandb` folder.
+
+Most of our changes happened inside `src/dogs_classification`, since our project ended up with more scripts than the template originally has. We kept the basic structure: `data.py` downloads the dataset with kagglehub, splits it and defines our `DogDataset` class, `model.py` defines our Lightning module around the pretrained ViT, `train.py` trains it with Hydra configs and W&B logging and `evaluate.py` evaluates the trained model on the test set. On top of that we added several files that are not part of the template: `bentoml.py`, which serves our model as the backend, `frontend.py` for our Streamlit frontend, `create_onnx.py` for the ONNX export, `link_model.py` for staging models in the W&B model registry, and `data_drift.py` and `drift_monitoring_api.py` for drift detection.
 
 ### Question 6
 
@@ -245,7 +247,8 @@ These concepts are important in larger projects to maintain a clean and readable
 >
 > Answer:
 
---- question 8 fill here ---
+Our total code coverage, computed by running `invoke test`, is 17%, measured over all of `src/dogs_classification`. The coverage is very unevenly distributed: `train.py` is at 97% and `model.py` and `data.py` are partially covered, but many modules like `bentoml.py`, `frontend.py`, `create_onnx.py` and `data_drift.py` are at 0%. Part of the reason is that some of these are tested differently: `bentoml.py` for example is tested through our API tests, which send real HTTP requests to a running BentoML service. Since the service runs in a separate process, the coverage tool does not count any of this as covered.
+Even with a coverage close to 100% we would not trust our code to be error free. Coverage only measures which lines were executed during the tests, not whether the behavior is actually correct. A line can be executed without any assertion checking its result, and edge cases or unexpected inputs can still cause errors even if every line was run at least once. Our bentoml.py shows the opposite case: the module is tested quite thoroughly but shows up as 0%. So coverage is useful to see what is untested, but it says little about correctness.
 
 ### Question 9
 
@@ -260,7 +263,7 @@ These concepts are important in larger projects to maintain a clean and readable
 >
 > Answer:
 
-For every To-Do, we created an issue in GitHub and assigned it to a group member. The person working on the issue created a branch linked to the issue and worked on it. As soon as the work was done, a pull request was created. Linting and unit tests were run automatically and only if all passed, the pull request was stashed and merged into the main branch. The linked issue was then automatically closed. We had a ruleset for our main branch that prohibited direct commits to the main branch, which ensured that all code required creating a pull request and passing the tests before being merged. In addition, to keep our commit history clean, we required that all pull requests were squashed before merging, so we only had one commit per pull request in the main branch.
+For every To-Do, we created an issue in GitHub and assigned it to a group member. The person working on the issue created a branch linked to the issue and worked on it. As soon as the work was done, a pull request was created. Linting and unit tests were run automatically and only if all passed, the pull request was stashed and merged into the master branch. The linked issue was then automatically closed. We had a ruleset for our master branch that prohibited direct commits to the master branch, which ensured that all code required creating a pull request and passing the tests before being merged. In addition, to keep our commit history clean, we required that all pull requests were squashed before merging, so we only had one commit per pull request in the master branch.
 
 ### Question 10
 
@@ -293,9 +296,9 @@ For every To-Do, we created an issue in GitHub and assigned it to a group member
 > Answer:
 
 Our continuous integration is organized into 3 parts: linting, testing and automatically building our docker images.
-The linting workflow runs on every push to the main branch as well as on pull requests on the main branch. We ensured that the linting tests were also already part of our pre-commit hooks, so that we could catch linting errors before pushing code to the repository and thereby avoid failing the CI workflow.
-The testing workflow runs on pull-requests only, but since pull-requests are required to be created before merging code into the main branch, this ensures that all code is tested before being merged. The testing workflow runs on multiple operating systems (Linux, Windows and MacOS) and includes both unit tests and API tests. We also make use of caching by caching the uv downloaded cache and the huggingface model, so that we do not have to download these every time the workflow is run.
-We had 4 trigger workflows for automatically building our docker images (training image, evaluation image, backend image and frontend image). These workflows run when merges are made to the main branch, but only if the merge includes changes to the respective files that are used to build the docker images (for example changes to train.py or train.dockerfile for the training docker image).
+The linting workflow runs on every push to the master branch as well as on pull requests on the master branch. We ensured that the linting tests were also already part of our pre-commit hooks, so that we could catch linting errors before pushing code to the repository and thereby avoid failing the CI workflow.
+The testing workflow runs on pull-requests only, but since pull-requests are required to be created before merging code into the master branch, this ensures that all code is tested before being merged. The testing workflow runs on multiple operating systems (Linux, Windows and MacOS) and includes both unit tests and API tests. We also make use of caching by caching the uv downloaded cache and the huggingface model, so that we do not have to download these every time the workflow is run.
+We had 4 trigger workflows for automatically building our docker images (training image, evaluation image, backend image and frontend image). These workflows run when merges are made to the master branch, but only if the merge includes changes to the respective files that are used to build the docker images (for example changes to train.py or train.dockerfile for the training docker image).
 Moreover, we implemented two continuous Machine Learning workflows. The first runs when changes to the data are made and then comments on the pull request with some data statistics. The other workflow runs when changes to the model registry in W&B are made. If a model is tagged with the alias "staged", then the workflow will run model tests in Github Actions and if the tests pass, the model gets promoted to the alias "production" in W&B.
 
 ## Running code and tracking experiments
@@ -315,7 +318,19 @@ Moreover, we implemented two continuous Machine Learning workflows. The first ru
 >
 > Answer:
 
---- question 12 fill here ---
+We used Hydra for configuring our experiments. All hyperparameters (learning rate, batch size, epochs, model name, ...) are stored in YAML files in the `configs/` folder, which are loaded in `train.py` via `@hydra.main`. With Hydra we can override any value from the command line without changing the code. To run an experiment we can use our invoke task:
+
+```bash
+uv run invoke train --lr 0.000002 --batch-size 32 --epochs 15
+```
+
+or call the training script directly with Hydra syntax:
+
+```bash
+uv run src/dogs_classification/train.py training.lr=0.000002 training.batch_size=32
+```
+
+We also created a `sweep.yaml` config that we used for W&B hyperparameter sweeps.
 
 ### Question 13
 
@@ -370,7 +385,14 @@ The third image shows some of the media that we logged in W&B: after each traini
 >
 > Answer:
 
---- question 15 fill here ---
+For our project we developed five docker images, one for each part of the pipeline: `data.dockerfile` for the data preprocessing, `train.dockerfile` for training, `bentoml.dockerfile` for the backend serving the model, `frontend.dockerfile` for the Streamlit frontend and `drift_monitoring_api.dockerfile` for the drift detection service. All images install their dependencies with uv using the frozen lock file and only the optional dependency groups they need, which keeps the builds reproducible and the images smaller. We wrapped building and running the images into invoke tasks. To build and run the training image locally we would run:
+
+```bash
+uv run invoke docker-build --image-name trainer --dockerfile dockerfiles/train.dockerfile
+uv run invoke docker-run --image trainer
+```
+
+The images are also built automatically by Cloud Build triggers whenever the relevant source files change on the default branch. The backend and frontend images are then deployed to Cloud Run, while the training image is used for training jobs in Vertex AI. Link to docker file: <https://github.com/hiwicip/mlops_dogs_classification/blob/master/dockerfiles/train.dockerfile>
 
 ### Question 16
 
@@ -412,6 +434,7 @@ We used the following GCP services:
 - Cloud Build: We used cloud build to automatically build our docker images. We implemented a trigger workflow that automatically builds the respective docker images when changes to the according files are pushed to the main branch.
 - Cloud Run: We deployed our Backend and Frontend applications in Cloud Run.
 - Cloud Scheduler: We used Cloud Scheduler to schedule a minutely job that pings the backend application to keep it alive and avoid cold starts.
+- Cloud Monitoring: We used Cloud Monitoring to track metrics of our deployed services (e.g. request count, latency, memory utilization) and set up alerting policies for high memory utilization, high backend latency and 5xx errors.
 
 ### Question 18
 
@@ -426,7 +449,9 @@ We used the following GCP services:
 >
 > Answer:
 
---- question 18 fill here ---
+We used Compute Engine in two ways during the project. At the beginning we manually created a VM through the GCP console and used it to run our first training experiments, mainly to get familiar with working on a cloud instance.
+
+Later we switched to Vertex AI custom training jobs for all further training, including our final model. Vertex AI still runs on Compute Engine under the hood, but the instances are provisioned automatically for the duration of the job and shut down afterwards. The machine type we used for these jobs is an `n1-standard-8` instance with an NVIDIA T4 GPU. Instead of setting up the environment manually, the instance runs our training docker image from the Artifact Registry, so all dependencies are already baked in. How the training jobs are submitted is described in Question 22.
 
 ### Question 19
 
@@ -469,7 +494,7 @@ We used the following GCP services:
 >
 > Answer:
 
---- question 22 fill here ---
+Yes, we managed to train our model in the cloud using Vertex AI. Our final model was trained this way. Training is defined as a custom job in `cloud/config_gpu.yaml`, which specifies the machine type (see Question 18) and points to our `dogs-train:gpu` docker image in the Artifact Registry. This way the job runs exactly the same training code and dependencies as our local setup. When the container starts, it first pulls the processed data from our GCP bucket via DVC and then runs `train.py`, which logs metrics to W&B during training and, once finished, uploads the best checkpoint to a GCP bucket and registers it in the W&B model registry with the `staging` alias. From there our CI workflow takes over (see Question 11), which tests staged models and promotes them to `production`. To submit a job we use a Cloud Build workflow (`cloud/vertex_ai_train.yaml`), which first injects the W&B API key from Secret Manager into the config and then submits the job with `gcloud ai custom-jobs create`. We preferred Vertex AI over a plain Compute Engine VM because the instance only runs for the duration of the job, so we do not pay for idle time or have to manage the VM ourselves.
 
 ## Deployment
 
@@ -520,7 +545,9 @@ We can deploy our API locally by running the command `invoke bentoml` (only the 
 >
 > Answer:
 
---- question 25 fill here ---
+For functional testing we wrote API tests (`tests/test_bentoml.py`) that use httpx to send real requests to a running BentoML service. They test the `/livez` endpoint and the `/predict` endpoint, checking status codes, the response schema and that the returned confidence scores are valid probabilities. These tests also run in our CI.
+
+For load testing we used Locust (`tests/performancetests/locustfile.py`), where simulated users send prediction requests with images to the deployed backend. We ran a test with 30 concurrent users, ramped up at 1 user per second, for 60 seconds against our Cloud Run deployment. The service handled all 121 requests without a single failure, but the throughput saturated at around 1.5 prediction requests per second, and the response time of `/predict` grew from around 0.7s with one user to a median of 10s (maximum 18s) at 30 users, so requests were queuing up. The `/livez` endpoint stayed fast the whole time, which shows the bottleneck is the model inference on CPU. To handle more load we would increase the number of Cloud Run instances (horizontal scaling) or use a GPU for inference (vertical scaling).
 
 ### Question 26
 
@@ -535,7 +562,6 @@ We can deploy our API locally by running the command `invoke bentoml` (only the 
 >
 > Answer:
 
---- question 26 fill here ---
 
 ## Overall discussion of project
 
@@ -554,7 +580,9 @@ We can deploy our API locally by running the command `invoke bentoml` (only the 
 >
 > Answer:
 
---- question 27 fill here ---
+In total we spent roughly $XX of our credits during the project. The shared project, which contains our deployed services, cost $28.55. There the most expensive service was the Artifact Registry ($15.05), mainly because we stored many versions of our rather large docker images over the course of development, followed by Cloud Run ($8.88) for hosting the backend and frontend. The training itself was billed to the individual accounts of the group members: group member 1 used $XX, group member 2 used $XX and group member 3 used $XX, mostly for the Vertex AI training jobs and the Compute Engine experiments at the beginning.
+
+In general we found working in the cloud to be a valuable but sometimes frustrating experience. Services like Cloud Run and Cloud Build make it easy to automate deployment, but debugging is slower than locally and small configuration mistakes can cost a lot of time. We also learned that costs can come from unexpected places. In our shared project the biggest expense was not compute but storing docker images. Overall the cloud is clearly the right tool for a real MLOps pipeline, but for a small project the setup overhead is considerable.
 
 ### Question 28
 
@@ -570,7 +598,9 @@ We can deploy our API locally by running the command `invoke bentoml` (only the 
 >
 > Answer:
 
---- question 28 fill here ---
+We implemented a frontend for our API using Streamlit (`frontend.py`). Users can upload an image or take a photo with their camera, which is sent to the backend, and the top five predicted dog breeds are shown with their confidence scores. We built it so that the model can be tried out without having to construct API requests by hand. It is deployed as its own Cloud Run service (see Question 24).
+
+We also deployed our data drift detection as a separate service instead of only running it as a local script. `drift_monitoring_api.py` is a FastAPI application that is built via `drift_monitoring_api.dockerfile` and deployed to Cloud Run. It exposes a `/report` endpoint that pulls a sample of the stored production inputs from our GCP bucket, compares them against the training data using Evidently and returns the resulting HTML drift report. This way anyone in the team can check for drift at any time, without needing the reference data or credentials locally.
 
 ### Question 29
 
@@ -606,7 +636,9 @@ If a user uses the frontend application, it sends a request to the backend appli
 >
 > Answer:
 
---- question 30 fill here ---
+Our biggest struggles were related to the cloud infrastructure rather than the model itself. We spent a lot of time getting our dockerfiles to build correctly, both locally and in Cloud Build. Debugging builds in Cloud Build is especially slow, because you have to wait for the remote build to fail before you can see what went wrong, so we went through many iterations until all images built reliably. Getting familiar with the GCP infrastructure and the console also took a significant amount of time. Connecting all the different services (Artifact Registry, Cloud Build triggers, Vertex AI, Cloud Run, service accounts and secrets) so that everything actually worked together end to end was harder than expected, since none of us had prior GCP experience. We mostly overcame this by trial and error: reading the Cloud Build logs carefully, making small incremental changes and testing the parts in isolation before connecting them.
+
+An unexpected problem was that at the start of the project every group member received 60$ of educational GCP credits, but shortly after, all our billing accounts were automatically suspended by Google because no payment information was on file, which is apparently a known issue with educational credits. Getting the accounts unsuspended took a long time and required several rounds of contact with the Google Cloud customer support. During that time we could not work with GCP at all, which delayed our cloud related work.
 
 ### Question 31
 
