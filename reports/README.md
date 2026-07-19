@@ -63,9 +63,9 @@ will check the repositories and the code to verify your answers.
 * [ ] Remember to comply with good coding practices (`pep8`) while doing the project (M7)
 * [ ] Do a bit of code typing and remember to document essential parts of your code (M7)
 * [x] Setup version control for your data or part of your data (M8)
-* [ ] Add command line interfaces and project commands to your code where it makes sense (M9)
-* [ ] Construct one or multiple docker files for your code (M10)
-* [ ] Build the docker files locally and make sure they work as intended (M10)
+* [X] Add command line interfaces and project commands to your code where it makes sense (M9)
+* [X] Construct one or multiple docker files for your code (M10)
+* [X] Build the docker files locally and make sure they work as intended (M10)
 * [x] Write one or multiple configurations files for your experiments (M11)
 * [x] Used Hydra to load the configurations and manage your hyperparameters (M11)
 * [X] Use profiling to optimize your code (M12)
@@ -86,34 +86,34 @@ will check the repositories and the code to verify your answers.
 * [X] Add a continues workflow that triggers when data changes (M19)
 * [ ] Add a continues workflow that triggers when changes to the model registry is made (M19)
 * [x] Create a data storage in GCP Bucket for your data and link this with your data version control setup (M21)
-* [ ] Create a trigger workflow for automatically building your docker images (M21)
+* [X] Create a trigger workflow for automatically building your docker images (M21)
 * [X] Get your model training in GCP using either the Engine or Vertex AI (M21)
 * [X] Create a FastAPI application that can do inference using your model (M22)
-* [ ] Deploy your model in GCP using either Functions or Run as the backend (M23)
+* [X] Deploy your model in GCP using either Functions or Run as the backend (M23)
 * [ ] Write API tests for your application and setup continues integration for these (M24)
 * [ ] Load test your application (M24)
-* [ ] Create a more specialized ML-deployment API using either ONNX or BentoML, or both (M25)
-* [ ] Create a frontend for your API (M26)
+* [X] Create a more specialized ML-deployment API using either ONNX or BentoML, or both (M25)
+* [X] Create a frontend for your API (M26)
 
 ### Week 3
 
-* [ ] Check how robust your model is towards data drifting (M27)
-* [ ] Setup collection of input-output data from your deployed application (M27)
-* [ ] Deploy to the cloud a drift detection API (M27)
+* [X] Check how robust your model is towards data drifting (M27)
+* [X] Setup collection of input-output data from your deployed application (M27)
+* [X] Deploy to the cloud a drift detection API (M27)
 * [ ] Instrument your API with a couple of system metrics (M28)
-* [ ] Setup cloud monitoring of your instrumented application (M28)
-* [ ] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
-* [ ] If applicable, optimize the performance of your data loading using distributed data loading (M29)
+* [X] Setup cloud monitoring of your instrumented application (M28)
+* [X] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
+* [X] If applicable, optimize the performance of your data loading using distributed data loading (M29)
 * [ ] If applicable, optimize the performance of your training pipeline by using distributed training (M30)
-* [ ] Play around with quantization, compilation and pruning for you trained models to increase inference speed (M31)
+* [X] Play around with quantization, compilation and pruning for you trained models to increase inference speed (M31)
 
 ### Extra
 
-* [ ] Write some documentation for your application (M32)
-* [ ] Publish the documentation to GitHub Pages (M32)
+* [X] Write some documentation for your application (M32)
+* [X] Publish the documentation to GitHub Pages (M32)
 * [ ] Revisit your initial project description. Did the project turn out as you wanted?
-* [ ] Create an architectural diagram over your MLOps pipeline
-* [ ] Make sure all group members have an understanding about all parts of the project
+* [X] Create an architectural diagram over your MLOps pipeline
+* [X] Make sure all group members have an understanding about all parts of the project
 * [ ] Uploaded all your code to GitHub
 
 ## Group information
@@ -130,7 +130,7 @@ will check the repositories and the code to verify your answers.
 >
 > Example:
 >
-> *sXXXXXX, sXXXXXX, sXXXXXX*
+> *12228410, 12910490, 12371375*
 >
 > Answer:
 
@@ -385,7 +385,7 @@ The third image shows some of the media that we logged in W&B: after each traini
 >
 > Answer:
 
---- question 16 fill here ---
+Debugging was mostly member-dependent: targeted print/logging statements helped as well as AI assistance to understand error messages. To ensure that bugs were not environment-specific we focused on ensuring that we have reproducible environment, as outlined above. For performance tracking, we did profile our code. train.py integrates PyTorch Lightning's PyTorchProfiler, which is toggled via the training.profile Hydra flag. We inspected these with the TensorBoard profiler plugin (torch-tb-profiler). This showed the forward/backward passes dominate runtime, while data loading wasn't a bottleneck once we set an appropriate number of workers and used pre-processed .pt tensors on disk. We didn't chase further micro-optimisations, since training speed was already acceptable and the rest is just GPU compute time in the ViT backbone.
 
 ## Working in the cloud
 
@@ -453,7 +453,7 @@ We used the following GCP services:
 >
 > Answer:
 
---- question 21 fill here ---
+![Cloud Build](figures/cloudbuild.PNG)
 
 ### Question 22
 
@@ -501,7 +501,7 @@ We did manage to write an API for our model. We used BentoML API and deployed it
 >
 > Answer:
 
-We can deploy our API locally by running the command `invoke bentoml` (only the backend) or `invoke frontend` in the terminal. This will start a local server that can be accessed at `http://localhost:3000`. Our API is also deployed in the cloud using Cloud Run. The backend can be accessed at `https://dogs-bentoml-288634047169.europe-west4.run.app/` and the frontend can be accessed at `https://dogs-frontend-288634047169.europe-west4.run.app/`.
+We deployed our API in two stages. Locally, we first started the BentoML service by running `invoke bentoml` (backend only) or `invoke frontend` (backend + Streamlit frontend) in the terminal, spinning up a server reachable at `http://localhost:3000` so we could test the `/predict` endpoint before shipping anything to the cloud. For the cloud deployment, we defined `cloudbuild_bentoml.yaml` and `cloudbuild_frontend.yaml`, which build the respective Docker image, push it to Artifact Registry, and deploy it to Cloud Run. This is wired up as a Cloud Build trigger, so a new version is deployed automatically whenever the relevant files change on the main branch, rather than us running `gcloud run deploy` by hand. The backend is reachable at `https://dogs-bentoml-288634047169.europe-west4.run.app/` and the frontend at `https://dogs-frontend-288634047169.europe-west4.run.app/`. To invoke the deployed service directly, one can POST an image to the backend's `/predict` endpoint, e.g. `curl -X POST -F "image=@dog.jpg" https://dogs-bentoml-288634047169.europe-west4.run.app/predict`, which returns the top-5 predicted breeds with their confidence scores.
 
 ### Question 25
 
@@ -531,8 +531,10 @@ We can deploy our API locally by running the command `invoke bentoml` (only the 
 > *measure ... and ... that would inform us about this ... behaviour of our application.*
 >
 > Answer:
-
---- question 26 fill here ---
+We set up monitoring on two levels, data drifting and system monitoring.
+*Data drift*: Every prediction the deployed model serves saves its input image, predicted class, and class probability to a GCS bucket. Our data_drift.py then builds a reference set from the training data and compares it against recent live predictions, looking at image features like brightness, contrast, and sharpness as well as prediction probabilities. Based on these info an HTML drift report is produced that gets uploaded to the bucket. We also added a FastAPI /report endpoint (`https://dogs-drift-monitoring-jfoaj7nkfa-ez.a.run.app/report`) that generates one on demand.
+*System monitoring*: Our BentoML service exposes a Prometheus /metrics endpoint that Google Managed Prometheus scrapes from the Cloud Run service, so we can track request latency, throughput, and errors. Alongside these custom metrics, we pull in the ones Google Cloud exposes for the service itself and show everything in a dedicated dashboard. We also set up Google Cloud's alerting on top, so a threshold breach, such as a latency spike, sends an alert instead of us having to monitor the dashboard. 
+Between the two levels, we can spot both gradual drift in the input and prediction distributions and operational problems with the service itself.
 
 ## Overall discussion of project
 
