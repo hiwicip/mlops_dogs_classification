@@ -10,6 +10,8 @@ You can access the application here:
 Project documentation is available here:
 [View the Documentation](https://hiwicip.github.io/mlops_dogs_classification/)
 
+![](reports/figures/example.jpeg)
+
 ## Project description
 
 This Machine Learning project is an end-to-end MLOps application for classifying dog breeds from images.
