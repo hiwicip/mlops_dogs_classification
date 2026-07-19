@@ -43,7 +43,7 @@ jobs:
 
       - name: Pull data
         run: |
-          uv run dvc pull --no-run-cache
+          uv run dvc pull --no-run-cache --force
 
       - name: Setup CML
         uses: iterative/setup-cml@v3
