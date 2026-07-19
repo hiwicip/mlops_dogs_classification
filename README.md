@@ -35,7 +35,7 @@ The directory structure of the project looks like this:
 ├── cloud/                    # Cloud deployment files
 │   ├── cleanup_policy.json
 │   ├── cloudbuild_bentoml.yaml
-│   ├── cloudbuild_evaluate.yaml
+│   ├── cloudbuild_drift_monitoring.yaml
 │   ├── cloudbuild_frontend.yaml
 │   ├── cloudbuild_train.yaml
 │   ├── config_gpu.yaml
@@ -49,7 +49,7 @@ The directory structure of the project looks like this:
 │   ├── api.dockerfile
 │   ├── bentoml.dockerfile
 │   ├── data.dockerfile
-│   ├── evaluate.dockerfile
+│   ├── drift_monitoring_api.dockerfile
 │   ├── frontend.dockerfile
 │   └── train.dockerfile
 ├── docs/                     # Documentation
@@ -69,6 +69,7 @@ The directory structure of the project looks like this:
 │       ├── data.py
 │       ├── data_drift.py
 │       ├── dataset_statistics.py
+│       ├── drift_monitoring_api.py
 │       ├── evaluate.py
 │       ├── frontend.py
 │       ├── link_model.py
