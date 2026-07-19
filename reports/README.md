@@ -403,13 +403,12 @@ The third image shows some of the media that we logged in W&B: after each traini
 
 We used the following GCP services:
 - Cloud Storage: We stored our data, trained models, input-output data and drift reports in GCP buckets.
-- Secret Manager: We used Secret Manager to store API keys (like the W&B API key).
+- Secret Manager: We used Secret Manager to store API keys (like W&B API key).
 - Service Account: We created service accounts to give our applications access to the GCP services.
-- Compute Engine: We used Compute Engine to run training jobs.
-- Vertex AI: We also used Vertex AI to train our models in the cloud. Our final model was trained in Vertex AI.
-- Artifact Registry: We stored our docker images in the artifact registry.
-- Cloud Build: We used cloud build to automatically build our docker images. We implemented a trigger workflow that automatically builds the respective docker images when changes to the according files are pushed to the main branch.
-- Cloud Run: We deployed our Backend and Frontend applications in Cloud Run.
+- Vertex AI: We chose Vertex AI to train our models in the cloud. Our final model was trained in Vertex AI.
+- Artifact Registry: For storing the docker images.
+- Cloud Build: We used cloud build to automatically build our docker images. We implemented a trigger workflow that automatically builds, pushes and deploys the respective docker images when changes to the according files are pushed to the main branch.
+- Cloud Run: To deploy BentoML backend, the Streamlit frontend and the data drifting website.
 - Cloud Scheduler: We used Cloud Scheduler to schedule a minutely job that pings the backend application to keep it alive and avoid cold starts.
 
 ### Question 18
@@ -485,7 +484,7 @@ We used the following GCP services:
 >
 > Answer:
 
-We did manage to write an API for our model. We first created a FastAPI application and also deployed it in the cloud, but later we switched to using BentoML to create a more specialized ML-deployment API.
+We did manage to write an API for our model. We used BentoML API and deployed it in the clode to create a more specialized ML-deployment API.
 
 ### Question 24
 
