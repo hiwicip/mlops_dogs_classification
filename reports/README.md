@@ -71,26 +71,26 @@ will check the repositories and the code to verify your answers.
 * [X] Use profiling to optimize your code (M12)
 * [X] Use logging to log important events in your code (M14)
 * [X] Use Weights & Biases to log training progress and other important metrics/artifacts in your code (M14)
-* [ ] Consider running a hyperparameter optimization sweep (M14)
+* [X] Consider running a hyperparameter optimization sweep (M14)
 * [X] Use PyTorch-lightning (if applicable) to reduce the amount of boilerplate in your code (M15)
 
 ### Week 2
 
 * [X] Write unit tests related to the data part of your code (M16)
-* [ ] Write unit tests related to model construction and or model training (M16)
+* [X] Write unit tests related to model construction and or model training (M16)
 * [X] Calculate the code coverage (M16)
 * [x] Get some continuous integration running on the GitHub repository (M17)
 * [x] Add caching and multi-os/python/pytorch testing to your continuous integration (M17)
 * [x] Add a linting step to your continuous integration (M17)
 * [x] Add pre-commit hooks to your version control setup (M18)
 * [X] Add a continues workflow that triggers when data changes (M19)
-* [ ] Add a continues workflow that triggers when changes to the model registry is made (M19)
+* [X] Add a continues workflow that triggers when changes to the model registry is made (M19)
 * [x] Create a data storage in GCP Bucket for your data and link this with your data version control setup (M21)
 * [X] Create a trigger workflow for automatically building your docker images (M21)
 * [X] Get your model training in GCP using either the Engine or Vertex AI (M21)
 * [X] Create a FastAPI application that can do inference using your model (M22)
 * [X] Deploy your model in GCP using either Functions or Run as the backend (M23)
-* [ ] Write API tests for your application and setup continues integration for these (M24)
+* [X] Write API tests for your application and setup continues integration for these (M24)
 * [ ] Load test your application (M24)
 * [X] Create a more specialized ML-deployment API using either ONNX or BentoML, or both (M25)
 * [X] Create a frontend for your API (M26)
@@ -100,7 +100,7 @@ will check the repositories and the code to verify your answers.
 * [X] Check how robust your model is towards data drifting (M27)
 * [X] Setup collection of input-output data from your deployed application (M27)
 * [X] Deploy to the cloud a drift detection API (M27)
-* [ ] Instrument your API with a couple of system metrics (M28)
+* [X] Instrument your API with a couple of system metrics (M28)
 * [X] Setup cloud monitoring of your instrumented application (M28)
 * [X] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
 * [X] If applicable, optimize the performance of your data loading using distributed data loading (M29)
@@ -114,7 +114,7 @@ will check the repositories and the code to verify your answers.
 * [ ] Revisit your initial project description. Did the project turn out as you wanted?
 * [X] Create an architectural diagram over your MLOps pipeline
 * [X] Make sure all group members have an understanding about all parts of the project
-* [ ] Uploaded all your code to GitHub
+* [X] Uploaded all your code to GitHub
 
 ## Group information
 
@@ -486,6 +486,8 @@ We used the following GCP services:
 > Answer:
 
 We did manage to write an API for our model. We used BentoML API and deployed it in the clode to create a more specialized ML-deployment API.
+Our API loads an ONNX model of our trained ViT model. We decided to use ONNX because its platform agnostic and can easily be deployed with an entirely different framework and hardware. If the ONNX model is not found locally, it will be automatically downloaded from the GCP bucket.
+The API takes an image as input which is processed using Hugging Face's `AutoImageProcessor`. The processed image is then passed to the ONNX model for inference. The API returns the top five predicted dog breeds along with their confidence scores. Both the input image and the predictions are stored in a GCP bucket for later analysis. We also added a health check endpoint to the API to ensure that the service is running correctly. To improve reliability and observability, we integrated Prometheus metrics to monitor metrics like request counts, latency and error counts.
 
 ### Question 24
 
@@ -621,4 +623,9 @@ If a user uses the frontend application, it sends a request to the backend appli
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
 
---- question 31 fill here ---
+Overall we tried that every group member contributed to all parts of the project. For example, everyone wrote some docker files and deployed some images in the cloud. We all contributed to the code in equal parts, and every script initially written by one group member was later improved by at least another group member.
+To mention some specific contributions, Student 12228410 worked on the training pipeline with PyTorch Lightning, train and model tests, model registry workflows and frontend development as well as its cloud deployment.
+Student 12910490 worked on automated cloud build and deployment for the backend, cloud monitoring, data and API testing, Weights & Biases integration and configuration management with Hydra.
+Student 12371375 worked on the data pipeline, API development, drift detection, documentation, Vertex AI training and hyperparameter sweeps.
+This is by no means an exhaustive list of contributions, but rather a few examples of the work that each group member did.
+We used generative AI tools in our project, to help us debug and make code suggestions like auto-completion. Mainly Claude and GitHub Copilot were used for this purpose.
