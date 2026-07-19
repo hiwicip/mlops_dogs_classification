@@ -60,8 +60,8 @@ will check the repositories and the code to verify your answers.
 * [X] Add a model to `model.py` and a training procedure to `train.py` and get that running (M6)
 * [X] Remember to either fill out the `requirements.txt`/`requirements_dev.txt` files or keeping your
     `pyproject.toml`/`uv.lock` up-to-date with whatever dependencies that you are using (M2+M6)
-* [ ] Remember to comply with good coding practices (`pep8`) while doing the project (M7)
-* [ ] Do a bit of code typing and remember to document essential parts of your code (M7)
+* [X] Remember to comply with good coding practices (`pep8`) while doing the project (M7)
+* [X] Do a bit of code typing and remember to document essential parts of your code (M7)
 * [x] Setup version control for your data or part of your data (M8)
 * [X] Add command line interfaces and project commands to your code where it makes sense (M9)
 * [X] Construct one or multiple docker files for your code (M10)
@@ -91,7 +91,7 @@ will check the repositories and the code to verify your answers.
 * [X] Create a FastAPI application that can do inference using your model (M22)
 * [X] Deploy your model in GCP using either Functions or Run as the backend (M23)
 * [X] Write API tests for your application and setup continues integration for these (M24)
-* [ ] Load test your application (M24)
+* [X] Load test your application (M24)
 * [X] Create a more specialized ML-deployment API using either ONNX or BentoML, or both (M25)
 * [X] Create a frontend for your API (M26)
 
@@ -123,7 +123,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 1 fill here ---
+Group B
 
 ### Question 2
 > **Enter the study number for each member in the group**
@@ -134,7 +134,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 2 fill here ---
+*12228410, 12910490, 12371375*
 
 ### Question 3
 > **Did you end up using any open-source frameworks/packages not covered in the course during your project? If so**
@@ -211,8 +211,9 @@ Most of our changes happened inside `src/dogs_classification`, since our project
 >
 > Answer:
 
-We used ruff for linting and ruff-format for formatting, wired up as pre-commit hooks alongside some smaller checks like trailing-whitespace and end-of-file-fixer, so issues get caught before a commit even lands rather than in review. We capped lines at 120 characters and enabled rule sets for pycodestyle, pyflakes, import sorting and a few others that we found actually useful rather than noisy. On top of that, we used mypy for static typing and docstrings for documentation.
-None of this is just box-ticking — on a group project like this, everyone is touching the same codebase without knowing every corner of it, so a consistent style saves you from re-learning formatting quirks every time you open someone else's file. Typing is arguably even more valuable: it turns a whole class of bugs (wrong argument passed, `None` used where a tensor was expected) into an error at edit time instead of a crash three functions deep during training. Docstrings do the same job for intent — they save the next person from having to reverse-engineer *why* a function exists just to use it correctly.
+We used ruff for linting and formatting, set up as pre-commit hooks together with some smaller checks like trailing-whitespace and end-of-file-fixer, so most issues are caught before the code is even committed. We set the line length to 120 characters and enabled rule sets for pycodestyle, pyflakes and import sorting. On top of that we used mypy for static type checking and wrote docstrings for the important functions.
+
+These concepts matter especially in larger projects where several people work on the same codebase. A consistent style makes it much easier to read code someone else wrote. Typing catches a whole class of bugs (for example passing a wrong argument or a `None` value) at edit time instead of at runtime during training, and docstrings explain the intent of a function without having to reverse-engineer it.
 
 ## Version control
 
@@ -297,7 +298,7 @@ After preprocessing converts the raw Stanford Dogs images into per-image .pt ten
 Our continuous integration is organized into 3 parts: linting, testing and automatically building our docker images.
 The linting workflow runs on every push to the master branch as well as on pull requests on the master branch. We ensured that the linting tests were also already part of our pre-commit hooks, so that we could catch linting errors before pushing code to the repository and thereby avoid failing the CI workflow.
 The testing workflow runs on pull-requests only, but since pull-requests are required to be created before merging code into the master branch, this ensures that all code is tested before being merged. The testing workflow runs on multiple operating systems (Linux, Windows and MacOS) and includes both unit tests and API tests. We also make use of caching by caching the uv downloaded cache and the huggingface model, so that we do not have to download these every time the workflow is run.
-We had 4 trigger workflows for automatically building our docker images (training image, evaluation image, backend image and frontend image). These workflows run when merges are made to the master branch, but only if the merge includes changes to the respective files that are used to build the docker images (for example changes to train.py or train.dockerfile for the training docker image).
+We had 4 trigger workflows for automatically building our docker images (training image, backend image and frontend image and drift monitoring image). These workflows run when merges are made to the master branch, but only if the merge includes changes to the respective files that are used to build the docker images (for example changes to train.py or train.dockerfile for the training docker image).
 Moreover, we implemented two continuous Machine Learning workflows. The first runs when changes to the data are made and then comments on the pull request with some data statistics. The other workflow runs when changes to the model registry in W&B are made. If a model is tagged with the alias "staged", then the workflow will run model tests in Github Actions and if the tests pass, the model gets promoted to the alias "production" in W&B.
 
 ## Running code and tracking experiments
@@ -478,7 +479,7 @@ Later we switched to Vertex AI custom training jobs for all further training, in
 >
 > Answer:
 
-![Cloud Build](figures/cloudbuild.PNG)
+![Cloud Build](figures/cloudbuild.png)
 
 ### Question 22
 
@@ -493,7 +494,7 @@ Later we switched to Vertex AI custom training jobs for all further training, in
 >
 > Answer:
 
-Yes, we managed to train our model in the cloud using Vertex AI. Our final model was trained this way. Training is defined as a custom job in `cloud/config_gpu.yaml`, which specifies the machine type (see Question 18) and points to our `dogs-train:gpu` docker image in the Artifact Registry. This way the job runs exactly the same training code and dependencies as our local setup. When the container starts, it first pulls the processed data from our GCP bucket via DVC and then runs `train.py`, which logs metrics to W&B during training and, once finished, uploads the best checkpoint to a GCP bucket and registers it in the W&B model registry with the `staging` alias. From there our CI workflow takes over (see Question 11), which tests staged models and promotes them to `production`. To submit a job we use a Cloud Build workflow (`cloud/vertex_ai_train.yaml`), which first injects the W&B API key from Secret Manager into the config and then submits the job with `gcloud ai custom-jobs create`. We preferred Vertex AI over a plain Compute Engine VM because the instance only runs for the duration of the job, so we do not pay for idle time or have to manage the VM ourselves.
+Yes, we managed to train our (final deployed) model in the cloud using Vertex AI. Training is defined as a custom job in `cloud/config_gpu.yaml`, which specifies the machine type (see Question 18) and points to our `dogs-train:gpu` docker image in the Artifact Registry. This way the job runs exactly the same training code and dependencies as our local setup. When the container starts, it first pulls the processed data from our GCP bucket via DVC and then runs `train.py`, which logs metrics to W&B during training and, once finished, uploads the best checkpoint to a GCP bucket and registers it in the W&B model registry with the `staging` alias. From there our CI workflow takes over (see Question 11), which tests staged models and promotes them to `production`. To submit a job we use a Cloud Build workflow (`cloud/vertex_ai_train.yaml`), which first injects the W&B API key from Secret Manager into the config and then submits the job with `gcloud ai custom-jobs create`. We preferred Vertex AI over a plain Compute Engine VM because the instance only runs for the duration of the job, so we do not pay for idle time or have to manage the VM ourselves.
 
 ## Deployment
 
@@ -560,7 +561,8 @@ For load testing we used Locust (`tests/performancetests/locustfile.py`), where 
 > *measure ... and ... that would inform us about this ... behaviour of our application.*
 >
 > Answer:
---- question 26 fill here ---
+
+Yes, we set up monitoring on two levels. For data drift, every prediction from the deployed model saves the input image, predicted class, and confidence to a GCS bucket. Our data_drift.py script then builds a reference set from the training data and compares it against the recent live predictions, looking at image features like brightness, contrast, and sharpness as well as prediction confidence. It produces an HTML drift report and uploads it back to the bucket, and we also wrapped this in a FastAPI /report endpoint (drift_monitoring_api.py) so we can generate the report on demand. For system monitoring, our BentoML service exposes a Prometheus /metrics endpoint that gets scraped by a Google Managed Prometheus sidecar on the Cloud Run service (run-monitoring.yaml, run-service.yaml). Cloud Run also gives us a set of built-in metrics through Cloud Monitoring for free, like request count, latency, CPU and memory usage, and instance count. Between the two, we can catch shifts in the incoming data over time and spot operational problems with the service.
 
 ## Overall discussion of project
 
@@ -579,7 +581,11 @@ For load testing we used Locust (`tests/performancetests/locustfile.py`), where 
 >
 > Answer:
 
-In total we spent roughly 79$ of our credits during the project, split across two billing accounts. In the first phase (June 8-17, before we linked the project to a different billing account) we spent about 50$, where the most expensive service was Cloud Storage with 34.99$, mainly for storing our data and models and repeatedly pulling the data into our training containers via DVC. Compute Engine (6.24$) and Vertex AI (5.04$) for training were surprisingly cheap in comparison. On the second billing account we spent about 29$, where the Artifact Registry was the most expensive service ($16.03), since we stored many versions of our rather large docker images, followed by Cloud Run (8.92$) for hosting the backend and frontend.
+In total we spent roughly $78 of our credits during the project.
+Our most expensive service was Cloud Storage ($35.33), mainly because for some days at the beginning of the project we accidentally used a bucket in a different region than our other services, which incurred additional costs. After we changed the bucket to the correct region, the costs dropped significantly to around $0.02 per day.
+The second most expensive service was the Artifact Registry ($19.15), mainly because we stored many versions of our rather large Docker images over the course of development.
+Other major costs were Cloud Run ($8.97) which we used for hosting the backend and frontend, Compute Engine ($9.07) and Vertex AI ($5.04) which we used for experiments and training our final model.
+The remaining costs were small and came from services such as Secret Manager ($0.20), Cloud Monitoring ($0.25), VM Manager ($0.04), Networking ($0.04), and Cloud Build ($0.03).
 
 In general we found working in the cloud to be a valuable but sometimes frustrating experience. Services like Cloud Run and Cloud Build make it easy to automate deployment, but debugging is slower than locally and small configuration mistakes can cost a lot of time. We also learned that costs come from unexpected places: storage and docker images cost us more than the actual training. Overall the cloud is clearly the right tool for a real MLOps pipeline, but for a small project the setup overhead is considerable.
 
