@@ -42,13 +42,13 @@ Documentation of core classes and functions used in the MLOps Dog Breed Classifi
 
 ::: dogs_classification.data_drift.download_predictions_from_gcs
 
-::: dogs_classification.data_drift.load_reference_pixel_values
+::: dogs_classification.data_drift.build_reference_df
 
-::: dogs_classification.data_drift.load_current_pixel_values
+::: dogs_classification.data_drift.build_reference_report_df
 
-::: dogs_classification.data_drift.extract_features
+::: dogs_classification.data_drift.load_or_build_reference_report_df
 
-::: dogs_classification.data_drift.compute_confidence
+::: dogs_classification.data_drift.run_analysis
 
 ::: dogs_classification.data_drift.upload_report_to_gcs
 
