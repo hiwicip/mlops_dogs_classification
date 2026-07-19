@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -285,7 +284,7 @@ def build_reference_report_df() -> pd.DataFrame:
 
 def _reference_report_cache_blob_name() -> str:
     """Content-hash-based cache key so the cache self-invalidates when the reference data changes."""
-    digest = hashlib.md5(METADATA_PATH.read_bytes()).hexdigest()
+    digest = _dvc_relpath_to_md5()["metadata.csv"]
     return f"{REFERENCE_REPORT_CACHE_PREFIX}reference_report_{digest}.parquet"
 
 
