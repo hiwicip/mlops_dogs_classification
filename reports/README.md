@@ -148,7 +148,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
-We did use an open-source package that was not covered in the course: Hugging Face Transformers. In particular, we used the pretrained ViT model `google/vit-base-patch16-224` together with `AutoImageProcessor` and `ViTForImageClassification` to build the image classification pipeline. This helped us reuse a strong pretrained vision backbone instead of training a model from scratch.
+We did use an open-source package that was not covered in the course: Hugging Face ⁠ transformers ⁠. In particular, we used the pretrained ViT model ⁠ google/vit-base-patch16-224 ⁠ together with ⁠ AutoImageProcessor ⁠ and ⁠ ViTForImageClassification ⁠ to build the image classification pipeline. This helped us reuse a properly pre-trained image classifier instead of training a model from scratch.
 
 ## Coding environment
 
@@ -274,7 +274,7 @@ For every To-Do, we created an issue in GitHub and assigned it to a group member
 >
 > Answer:
 
---- question 10 fill here ---
+We did make use of DVC in the following way: after preprocessing converts the raw Stanford Dogs images into per-image .pt tensors plus a metadata.csv and classes.json, we tracked the processed data directory with DVC and pushed it to a Google Cloud Storage remote using the dvc-gs backend, so that only the small .dvc pointer files are committed to Git while the data itself stays in the bucket. In the end it helped us in tying each commit to the exact dataset it was produced with, letting any team member (as well as our CI and cloud training jobs) run dvc pull to fetch a fixed version instead of re-running the slow Kaggle download and preprocessing, for controlling the data-versioning and reproducibility part of our pipeline.
 
 ### Question 11
 
@@ -329,7 +329,8 @@ Moreover, we implemented two continuous Machine Learning workflows. The first ru
 >
 > Answer:
 
---- question 13 fill here ---
+We made use of config files. Whenever an experiment is run the following happens: Hydra loads all the hyperparameters (learning rate, batch size, epochs, model name, profiling flag) from configs/config.yaml, and the resolved config is written into a timestamped outputs/ directory, so we always know which settings produced a run. The key parameters are also logged to Weights & Biases, and the resulting checkpoint is uploaded to our GCS bucket and registered as a W&B artifact linked to that run. On top of this, our data split uses a fixed seed (SEED = 42) and the processed data is DVC-versioned, so the dataset is fixed too, and dependencies are pinned via uv.lock.
+To reproduce an experiment one would have to pull the data with dvc pull, check out the matching commit, read the hyperparameters back from the corresponding W&B run, and re-run training with that config. This chains data, code, config, and environment into one reproducible pipeline.
 
 ### Question 14
 
