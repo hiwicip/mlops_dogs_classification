@@ -194,7 +194,9 @@ uv sync --all-extras
 >
 > Answer:
 
-From the cookiecutter template we have filled out the `.github`, `configs`, `dockerfiles`, `docs`, `models`, `src` and `tests` folder. We have removed the `notebooks` folder because we did not use any notebooks in our project. We have added a `data` folder, where we store the raw and the processed data, a `cloud` folder which contains mainly cloud build files and a `logs` folder, an `output` folder and a `wandb` folder.
+From the cookiecutter template we have filled out the `.github`, `configs`, `dockerfiles`, `docs`, `models`, `src` and `tests` folders. We removed the `notebooks` folder because we did not use any notebooks in our project. We added a `data` folder for the raw and processed data, a `cloud` folder that mainly contains cloud build files, and also a `logs`, `outputs` and `wandb` folder.
+
+Most of our changes happened inside `src/dogs_classification`, since our project ended up with more scripts than the template originally has. We kept the basic structure: `data.py` downloads the dataset with kagglehub, splits it and defines our `DogDataset` class, `model.py` defines our Lightning module around the pretrained ViT, `train.py` trains it with Hydra configs and W&B logging and `evaluate.py` evaluates the trained model on the test set. On top of that we added several files that are not part of the template: `bentoml.py`, which serves our model as the backend, `frontend.py` for our Streamlit frontend, `create_onnx.py` for the ONNX export, `link_model.py` for staging models in the W&B model registry, and `data_drift.py` and `drift_monitoring_api.py` for drift detection.
 
 ### Question 6
 
@@ -244,7 +246,8 @@ In total we have implemented 26 tests across four files. `test_data.py` (7 tests
 >
 > Answer:
 
---- question 8 fill here ---
+Our total code coverage, computed by running `invoke test`, is 17%, measured over all of `src/dogs_classification`. The coverage is very unevenly distributed: `train.py` is at 97% and `model.py` and `data.py` are partially covered, but many modules like `bentoml.py`, `frontend.py`, `create_onnx.py` and `data_drift.py` are at 0%. Part of the reason is that some of these are tested differently: `bentoml.py` for example is tested through our API tests, which send real HTTP requests to a running BentoML service. Since the service runs in a separate process, the coverage tool does not count any of this as covered.
+Even with a coverage close to 100% we would not trust our code to be error free. Coverage only measures which lines were executed during the tests, not whether the behavior is actually correct. A line can be executed without any assertion checking its result, and edge cases or unexpected inputs can still cause errors even if every line was run at least once. Our bentoml.py shows the opposite case: the module is tested quite thoroughly but shows up as 0%. So coverage is useful to see what is untested, but it says little about correctness.
 
 ### Question 9
 
@@ -314,7 +317,19 @@ Moreover, we implemented two continuous Machine Learning workflows. The first ru
 >
 > Answer:
 
---- question 12 fill here ---
+We used Hydra for configuring our experiments. All hyperparameters (learning rate, batch size, epochs, model name, ...) are stored in YAML files in the `configs/` folder, which are loaded in `train.py` via `@hydra.main`. With Hydra we can override any value from the command line without changing the code. To run an experiment we can use our invoke task:
+
+```bash
+uv run invoke train --lr 0.000002 --batch-size 32 --epochs 15
+```
+
+or call the training script directly with Hydra syntax:
+
+```bash
+uv run src/dogs_classification/train.py training.lr=0.000002 training.batch_size=32
+```
+
+We also created a `sweep.yaml` config that we used for W&B hyperparameter sweeps.
 
 ### Question 13
 
@@ -370,7 +385,14 @@ The third image shows some of the media that we logged in W&B: after each traini
 >
 > Answer:
 
---- question 15 fill here ---
+For our project we developed five docker images, one for each part of the pipeline: `data.dockerfile` for the data preprocessing, `train.dockerfile` for training, `bentoml.dockerfile` for the backend serving the model, `frontend.dockerfile` for the Streamlit frontend and `drift_monitoring_api.dockerfile` for the drift detection service. All images install their dependencies with uv using the frozen lock file and only the optional dependency groups they need, which keeps the builds reproducible and the images smaller. We wrapped building and running the images into invoke tasks. To build and run the training image locally we would run:
+
+```bash
+uv run invoke docker-build --image-name trainer --dockerfile dockerfiles/train.dockerfile
+uv run invoke docker-run --image trainer
+```
+
+The images are also built automatically by Cloud Build triggers whenever the relevant source files change on the default branch. The backend and frontend images are then deployed to Cloud Run, while the training image is used for training jobs in Vertex AI. Link to docker file: <https://github.com/hiwicip/mlops_dogs_classification/blob/master/dockerfiles/train.dockerfile>
 
 ### Question 16
 
@@ -411,6 +433,7 @@ We used the following GCP services:
 - Cloud Build: We used cloud build to automatically build our docker images. We implemented a trigger workflow that automatically builds, pushes and deploys the respective docker images when changes to the according files are pushed to the master branch.
 - Cloud Run: To deploy BentoML backend, the Streamlit frontend and the data drifting website.
 - Cloud Scheduler: We used Cloud Scheduler to schedule a minutely job that pings the backend application to keep it alive and avoid cold starts.
+- Cloud Monitoring: We used Cloud Monitoring to track metrics of our deployed services (e.g. request count, latency, memory utilization) and set up alerting policies for high memory utilization, high backend latency and 5xx errors.
 
 ### Question 18
 
@@ -425,7 +448,9 @@ We used the following GCP services:
 >
 > Answer:
 
---- question 18 fill here ---
+We used Compute Engine in two ways during the project. At the beginning we manually created a VM through the GCP console and used it to run our first training experiments, mainly to get familiar with working on a cloud instance.
+
+Later we switched to Vertex AI custom training jobs for all further training, including our final model. Vertex AI still runs on Compute Engine under the hood, but the instances are provisioned automatically for the duration of the job and shut down afterwards. The machine type we used for these jobs is an `n1-standard-8` instance with an NVIDIA T4 GPU. Instead of setting up the environment manually, the instance runs our training docker image from the Artifact Registry, so all dependencies are already baked in. How the training jobs are submitted is described in Question 22.
 
 ### Question 19
 
@@ -468,7 +493,7 @@ We used the following GCP services:
 >
 > Answer:
 
---- question 22 fill here ---
+Yes, we managed to train our model in the cloud using Vertex AI. Our final model was trained this way. Training is defined as a custom job in `cloud/config_gpu.yaml`, which specifies the machine type (see Question 18) and points to our `dogs-train:gpu` docker image in the Artifact Registry. This way the job runs exactly the same training code and dependencies as our local setup. When the container starts, it first pulls the processed data from our GCP bucket via DVC and then runs `train.py`, which logs metrics to W&B during training and, once finished, uploads the best checkpoint to a GCP bucket and registers it in the W&B model registry with the `staging` alias. From there our CI workflow takes over (see Question 11), which tests staged models and promotes them to `production`. To submit a job we use a Cloud Build workflow (`cloud/vertex_ai_train.yaml`), which first injects the W&B API key from Secret Manager into the config and then submits the job with `gcloud ai custom-jobs create`. We preferred Vertex AI over a plain Compute Engine VM because the instance only runs for the duration of the job, so we do not pay for idle time or have to manage the VM ourselves.
 
 ## Deployment
 
@@ -519,7 +544,9 @@ We first ran the BentoML service locally in the terminal, testing the `/predict`
 >
 > Answer:
 
---- question 25 fill here ---
+For functional testing we wrote API tests (`tests/test_bentoml.py`) that use httpx to send real requests to a running BentoML service. They test the `/livez` endpoint and the `/predict` endpoint, checking status codes, the response schema and that the returned confidence scores are valid probabilities. These tests also run in our CI.
+
+For load testing we used Locust (`tests/performancetests/locustfile.py`), where simulated users send prediction requests with images to the deployed backend. We ran a test with 30 concurrent users, ramped up at 1 user per second, for 60 seconds against our Cloud Run deployment. The service handled all 121 requests without a single failure, but the throughput saturated at around 1.5 prediction requests per second, and the response time of `/predict` grew from around 0.7s with one user to a median of 10s (maximum 18s) at 30 users, so requests were queuing up. The `/livez` endpoint stayed fast the whole time, which shows the bottleneck is the model inference on CPU. To handle more load we would increase the number of Cloud Run instances (horizontal scaling) or use a GPU for inference (vertical scaling).
 
 ### Question 26
 
@@ -533,8 +560,7 @@ We first ran the BentoML service locally in the terminal, testing the `/predict`
 > *measure ... and ... that would inform us about this ... behaviour of our application.*
 >
 > Answer:
-Every prediction the deployed model serves saves its input image, predicted class, and class probability to a GCS bucket. `data_drift.py` builds a reference set from the training data and compares it against these recent live predictions, looking at image features like brightness, contrast, and sharpness as well as prediction probabilities, then produces an HTML drift report that gets uploaded to the bucket. We also added a FastAPI /report endpoint (`https://dogs-drift-monitoring-jfoaj7nkfa-ez.a.run.app/report`) that generates one on demand, so we can catch gradual drift in the input and prediction distributions.
-On the system side, our BentoML service exposes a Prometheus /metrics endpoint that Google Managed Prometheus scrapes from the Cloud Run service, so we can track request latency, throughput, and errors alongside the metrics Google Cloud exposes for the service itself, all shown in a dedicated dashboard. Google Cloud alerting sits on top of that, so a threshold breach, such as a latency spike, sends an alert instead of us having to watch the dashboard ourselves.
+--- question 26 fill here ---
 
 ## Overall discussion of project
 
@@ -553,7 +579,9 @@ On the system side, our BentoML service exposes a Prometheus /metrics endpoint t
 >
 > Answer:
 
---- question 27 fill here ---
+In total we spent roughly 79$ of our credits during the project, split across two billing accounts. In the first phase (June 8-17, before we linked the project to a different billing account) we spent about 50$, where the most expensive service was Cloud Storage with 34.99$, mainly for storing our data and models and repeatedly pulling the data into our training containers via DVC. Compute Engine (6.24$) and Vertex AI (5.04$) for training were surprisingly cheap in comparison. On the second billing account we spent about 29$, where the Artifact Registry was the most expensive service ($16.03), since we stored many versions of our rather large docker images, followed by Cloud Run (8.92$) for hosting the backend and frontend.
+
+In general we found working in the cloud to be a valuable but sometimes frustrating experience. Services like Cloud Run and Cloud Build make it easy to automate deployment, but debugging is slower than locally and small configuration mistakes can cost a lot of time. We also learned that costs come from unexpected places: storage and docker images cost us more than the actual training. Overall the cloud is clearly the right tool for a real MLOps pipeline, but for a small project the setup overhead is considerable.
 
 ### Question 28
 
@@ -569,7 +597,9 @@ On the system side, our BentoML service exposes a Prometheus /metrics endpoint t
 >
 > Answer:
 
---- question 28 fill here ---
+We implemented a frontend for our API using Streamlit (`frontend.py`). Users can upload an image or take a photo with their camera, which is sent to the backend, and the top five predicted dog breeds are shown with their confidence scores. We built it so that the model can be tried out without having to construct API requests by hand. It is deployed as its own Cloud Run service (see Question 24).
+
+We also deployed our data drift detection as a separate service instead of only running it as a local script. `drift_monitoring_api.py` is a FastAPI application that is built via `drift_monitoring_api.dockerfile` and deployed to Cloud Run. It exposes a `/report` endpoint that pulls a sample of the stored production inputs from our GCP bucket, compares them against the training data using Evidently and returns the resulting HTML drift report. This way anyone in the team can check for drift at any time, without needing the reference data or credentials locally.
 
 ### Question 29
 
@@ -605,7 +635,9 @@ If a user uses the frontend application, it sends a request to the backend appli
 >
 > Answer:
 
---- question 30 fill here ---
+Our biggest struggles were related to the cloud infrastructure rather than the model itself. We spent a lot of time getting our dockerfiles to build correctly, both locally and in Cloud Build. Debugging builds in Cloud Build is especially slow, because you have to wait for the remote build to fail before you can see what went wrong, so we went through many iterations until all images built reliably. Getting familiar with the GCP infrastructure and the console also took a significant amount of time. Connecting all the different services (Artifact Registry, Cloud Build triggers, Vertex AI, Cloud Run, service accounts and secrets) so that everything actually worked together end to end was harder than expected, since none of us had prior GCP experience. We mostly overcame this by trial and error: reading the Cloud Build logs carefully, making small incremental changes and testing the parts in isolation before connecting them.
+
+An unexpected problem was that at the start of the project every group member received 50$ of educational GCP credits, but shortly after, all our billing accounts were automatically suspended by Google because no payment information was on file, which is apparently a known issue with educational credits. Getting the accounts unsuspended took a long time and required several rounds of contact with the Google Cloud customer support. During that time we could not work with GCP at all, which delayed our cloud related work.
 
 ### Question 31
 
