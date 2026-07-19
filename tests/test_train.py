@@ -45,6 +45,7 @@ def test_training_step_runs(model):
     trainer = Trainer(max_epochs=1, fast_dev_run=True, logger=False, enable_checkpointing=False)
     trainer.fit(model)
 
+
 def test_parameters_updated(model):
     """At least one parameter tensor should change after a single Trainer step."""
     params_before = [p.data.clone() for p in model.parameters()]
@@ -54,6 +55,7 @@ def test_parameters_updated(model):
     assert any(not torch.equal(before, after) for before, after in zip(params_before, params_after, strict=True)), (
         "No parameters changed after a training step — optimizer may not be updating weights"
     )
+
 
 # --- train.py structure tests (verify setup without running real training) ---
 
