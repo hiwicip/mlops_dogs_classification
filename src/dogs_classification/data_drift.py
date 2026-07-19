@@ -26,6 +26,9 @@ REPORT_OUTPUT_PATH = "drift_reports/drift_report_{timestamp}.html"
 METADATA_PATH = Path("data/processed/metadata.csv")
 CLASSES_FILE = Path("data/processed/classes.json")
 ONNX_MODEL_GCS_PATH = Path("models/dog_classifier.onnx")
+PROCESSED_DVC_FILE = Path("data/processed.dvc")
+PROCESSED_DIR = Path("data/processed")
+DOWNLOAD_WORKERS = 8
 
 SAMPLES_PER_CLASS = 5
 FEATURE_NAMES = ["brightness", "contrast", "sharpness"]
@@ -252,9 +255,28 @@ def build_reference_df() -> pd.DataFrame:
     return reference_df
 
 
-def run_analysis(reference_df: pd.DataFrame, current_df: pd.DataFrame) -> str:
+def load_or_build_reference_report_df() -> pd.DataFrame:
+    """Compute the reference-side report columns once (deterministic sample => same result every time)."""
+    load_model_and_processor()
+
+    with open(CLASSES_FILE) as f:
+        class_to_idx = json.load(f)
+
+    reference_df = build_reference_df()
+    reference_df["label"] = reference_df["breed"].map(class_to_idx).astype(int)
+
+    reference_pixel_values = load_reference_pixel_values(reference_df)
+    reference_df[FEATURE_NAMES] = extract_features(reference_pixel_values)
+    reference_df["confidence"] = compute_confidence(model, reference_pixel_values.numpy())
+
+    reference_df = reference_df[["label", "confidence", *FEATURE_NAMES]]
+    reference_df["label"] = reference_df["label"].astype("category")
+    return reference_df
+
+
+def run_analysis(reference_report_df: pd.DataFrame, current_df: pd.DataFrame) -> str:
     """
-    Run the drift analysis between reference and current data and save the report to disk.
+    Run the drift analysis between the (precomputed) reference report data and current data.
 
     Returns:
         str: The local path to the saved HTML report.
@@ -287,8 +309,8 @@ def main() -> None:
         print("No predictions found in the bucket.")
         return
 
-    reference_df = build_reference_df()
-    local_path = run_analysis(reference_df, current_df)
+    reference_report_df = load_or_build_reference_report_df()
+    local_path = run_analysis(reference_report_df, current_df)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     upload_report_to_gcs(local_path, BUCKET_NAME, REPORT_OUTPUT_PATH.format(timestamp=timestamp))
