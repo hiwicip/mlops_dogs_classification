@@ -6,6 +6,8 @@ on:
     paths:
     - '**/*.dvc'
     - '.dvc/**'
+  push:
+    branches: [109-in-dvc-ci-workflow-use-cml-functions-instead-of-gh-functions]
 
 jobs:
   run_data_checker:
