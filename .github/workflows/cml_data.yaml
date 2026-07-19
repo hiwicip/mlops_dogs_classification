@@ -34,7 +34,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --locked --dev --extra cloud
+          uv sync --locked --dev --extra cloud --extra train
 
       - name: Auth with GCP
         uses: google-github-actions/auth@v3
