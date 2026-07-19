@@ -669,10 +669,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dogs_classification.data_drift.load_reference_pixel_values" class="md-nav__link">
+  <a href="#dogs_classification.data_drift.build_reference_df" class="md-nav__link">
     <span class="md-ellipsis">
       
-        load_reference_pixel_values
+        build_reference_df
       
     </span>
   </a>
@@ -680,10 +680,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dogs_classification.data_drift.load_current_pixel_values" class="md-nav__link">
+  <a href="#dogs_classification.data_drift.build_reference_report_df" class="md-nav__link">
     <span class="md-ellipsis">
       
-        load_current_pixel_values
+        build_reference_report_df
       
     </span>
   </a>
@@ -691,10 +691,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dogs_classification.data_drift.extract_features" class="md-nav__link">
+  <a href="#dogs_classification.data_drift.load_or_build_reference_report_df" class="md-nav__link">
     <span class="md-ellipsis">
       
-        extract_features
+        load_or_build_reference_report_df
       
     </span>
   </a>
@@ -702,10 +702,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dogs_classification.data_drift.compute_confidence" class="md-nav__link">
+  <a href="#dogs_classification.data_drift.run_analysis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        compute_confidence
+        run_analysis
       
     </span>
   </a>
@@ -1158,10 +1158,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dogs_classification.data_drift.load_reference_pixel_values" class="md-nav__link">
+  <a href="#dogs_classification.data_drift.build_reference_df" class="md-nav__link">
     <span class="md-ellipsis">
       
-        load_reference_pixel_values
+        build_reference_df
       
     </span>
   </a>
@@ -1169,10 +1169,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dogs_classification.data_drift.load_current_pixel_values" class="md-nav__link">
+  <a href="#dogs_classification.data_drift.build_reference_report_df" class="md-nav__link">
     <span class="md-ellipsis">
       
-        load_current_pixel_values
+        build_reference_report_df
       
     </span>
   </a>
@@ -1180,10 +1180,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dogs_classification.data_drift.extract_features" class="md-nav__link">
+  <a href="#dogs_classification.data_drift.load_or_build_reference_report_df" class="md-nav__link">
     <span class="md-ellipsis">
       
-        extract_features
+        load_or_build_reference_report_df
       
     </span>
   </a>
@@ -1191,10 +1191,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dogs_classification.data_drift.compute_confidence" class="md-nav__link">
+  <a href="#dogs_classification.data_drift.run_analysis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        compute_confidence
+        run_analysis
       
     </span>
   </a>
@@ -5342,54 +5342,40 @@ sends the image to the backend for classification, and displays the results.</p>
 <div class="doc doc-object doc-function">
 
 
-<h3 id="dogs_classification.data_drift.load_reference_pixel_values" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">dogs_classification.data_drift.load_reference_pixel_values</span>
+<h3 id="dogs_classification.data_drift.build_reference_df" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">dogs_classification.data_drift.build_reference_df</span>
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">load_reference_pixel_values</span><span class="p">(</span>
-    <span class="n">reference_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">build_reference_df</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Load reference pixel-value tensors, from local disk if present, else from the DVC remote cache.</p>
+        <p>Build the reference dataframe from the processed metadata (train split, sampled per class).</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dogs_classification/data_drift.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_reference_pixel_values</span><span class="p">(</span><span class="n">reference_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load reference pixel-value tensors, from local disk if present, else from the DVC remote cache.&quot;&quot;&quot;</span>
-    <span class="n">client</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
-    <span class="n">bucket</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">BUCKET_NAME</span><span class="p">)</span>
-    <span class="n">hashes</span> <span class="o">=</span> <span class="n">_dvc_relpath_to_md5</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_one</span><span class="p">(</span><span class="n">image_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="n">local</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">local</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">_download_dvc_tracked_file</span><span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="n">image_path</span><span class="p">,</span> <span class="n">hashes</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
-
-    <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">DOWNLOAD_WORKERS</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
-        <span class="n">pixel_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_load_one</span><span class="p">,</span> <span class="n">reference_df</span><span class="p">[</span><span class="s2">&quot;image_path&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
-    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">pixel_values</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_reference_df</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the reference dataframe from the processed metadata (train split, sampled per class).&quot;&quot;&quot;</span>
+    <span class="n">reference_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">METADATA_PATH</span><span class="p">)</span>
+    <span class="n">reference_df</span> <span class="o">=</span> <span class="n">reference_df</span><span class="p">[</span><span class="n">reference_df</span><span class="p">[</span><span class="s2">&quot;split&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">reference_df</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">reference_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="n">group_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">SAMPLES_PER_CLASS</span><span class="p">),</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">reference_df</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -5399,84 +5385,170 @@ sends the image to the backend for classification, and displays the results.</p>
 <div class="doc doc-object doc-function">
 
 
-<h3 id="dogs_classification.data_drift.load_current_pixel_values" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">dogs_classification.data_drift.load_current_pixel_values</span>
+<h3 id="dogs_classification.data_drift.build_reference_report_df" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">dogs_classification.data_drift.build_reference_report_df</span>
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">load_current_pixel_values</span><span class="p">(</span>
-    <span class="n">current_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">build_reference_report_df</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Load pixel values for the current dataset from Google Cloud Storage (GCS).</p>
+        <p>Compute the reference-side report columns (features + confidence) from scratch.</p>
+<p>This is the CPU-heavy part (image loading + ONNX inference over the whole reference
+sample), so callers should go through load_or_build_reference_report_df() to avoid
+redoing it on every cold start.</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/dogs_classification/data_drift.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_reference_report_df</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the reference-side report columns (features + confidence) from scratch.</span>
+
+<span class="sd">    This is the CPU-heavy part (image loading + ONNX inference over the whole reference</span>
+<span class="sd">    sample), so callers should go through load_or_build_reference_report_df() to avoid</span>
+<span class="sd">    redoing it on every cold start.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">load_model_and_processor</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CLASSES_FILE</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">class_to_idx</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">reference_df</span> <span class="o">=</span> <span class="n">build_reference_df</span><span class="p">()</span>
+    <span class="n">reference_df</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reference_df</span><span class="p">[</span><span class="s2">&quot;breed&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">class_to_idx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">reference_pixel_values</span> <span class="o">=</span> <span class="n">load_reference_pixel_values</span><span class="p">(</span><span class="n">reference_df</span><span class="p">)</span>
+    <span class="n">reference_df</span><span class="p">[</span><span class="n">FEATURE_NAMES</span><span class="p">]</span> <span class="o">=</span> <span class="n">extract_features</span><span class="p">(</span><span class="n">reference_pixel_values</span><span class="p">)</span>
+    <span class="n">reference_df</span><span class="p">[</span><span class="s2">&quot;confidence&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">compute_confidence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">reference_pixel_values</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+
+    <span class="n">reference_df</span> <span class="o">=</span> <span class="n">reference_df</span><span class="p">[[</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;confidence&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">FEATURE_NAMES</span><span class="p">]]</span>
+    <span class="n">reference_df</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reference_df</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;category&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reference_df</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dogs_classification.data_drift.load_or_build_reference_report_df" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">dogs_classification.data_drift.load_or_build_reference_report_df</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">load_or_build_reference_report_df</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Load the cached reference report from GCS, computing and caching it if missing.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/dogs_classification/data_drift.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_or_build_reference_report_df</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the cached reference report from GCS, computing and caching it if missing.&quot;&quot;&quot;</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
+    <span class="n">bucket</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">BUCKET_NAME</span><span class="p">)</span>
+    <span class="n">blob</span> <span class="o">=</span> <span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">_reference_report_cache_blob_name</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">client</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading cached reference report from gs://</span><span class="si">{</span><span class="n">BUCKET_NAME</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">download_as_bytes</span><span class="p">()))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No cached reference report found, computing it now&quot;</span><span class="p">)</span>
+    <span class="n">reference_report_df</span> <span class="o">=</span> <span class="n">build_reference_report_df</span><span class="p">()</span>
+
+    <span class="n">buffer</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
+    <span class="n">reference_report_df</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">buffer</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">blob</span><span class="o">.</span><span class="n">upload_from_file</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="s2">&quot;application/octet-stream&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cached reference report to gs://</span><span class="si">{</span><span class="n">BUCKET_NAME</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">reference_report_df</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dogs_classification.data_drift.run_analysis" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">dogs_classification.data_drift.run_analysis</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">run_analysis</span><span class="p">(</span>
+    <span class="n">reference_report_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">current_df</span><span class="p">:</span> <span class="n">DataFrame</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Run the drift analysis between the (precomputed) reference report data and current data.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
+<th>Name</th>          <th>Type</th>
           <th>Description</th>
-          <th>Default</th>
         </tr>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>current_df</code>
-            </td>
-            <td>
-                  <code><span title="pandas.DataFrame">DataFrame</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A DataFrame containing the current dataset with image paths.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>bucket_name</code>
-            </td>
-            <td>
+<td><code>str</code></td>            <td>
                   <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The name of the GCS bucket.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="torch.Tensor">Tensor</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>torch.Tensor: A tensor containing the pixel values of the current images.</p>
+                <p>The local path to the saved HTML report.</p>
               </div>
             </td>
           </tr>
@@ -5486,329 +5558,57 @@ sends the image to the backend for classification, and displays the results.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dogs_classification/data_drift.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_current_pixel_values</span><span class="p">(</span><span class="n">current_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_analysis</span><span class="p">(</span><span class="n">reference_report_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">current_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Load pixel values for the current dataset from Google Cloud Storage (GCS).</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        current_df (pd.DataFrame): A DataFrame containing the current dataset with image paths.</span>
-<span class="sd">        bucket_name (str): The name of the GCS bucket.</span>
+<span class="sd">    Run the drift analysis between the (precomputed) reference report data and current data.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        torch.Tensor: A tensor containing the pixel values of the current images.</span>
+<span class="sd">        str: The local path to the saved HTML report.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+    <span class="n">load_model_and_processor</span><span class="p">()</span>
 
-    <span class="n">client</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
-    <span class="n">bucket</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">bucket_name</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CLASSES_FILE</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">class_to_idx</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-    <span class="k">assert</span> <span class="n">processor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Call load_model_and_processor() before loading pixel values&quot;</span>
+    <span class="n">current_df</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_df</span><span class="p">[</span><span class="s2">&quot;predicted_class&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">class_to_idx</span><span class="p">)</span>
+    <span class="n">current_df</span> <span class="o">=</span> <span class="n">current_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">current_df</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_df</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_one</span><span class="p">(</span><span class="n">image_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="n">image_bytes</span> <span class="o">=</span> <span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span><span class="o">.</span><span class="n">download_as_bytes</span><span class="p">()</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">))</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
-        <span class="n">inputs</span> <span class="o">=</span> <span class="n">processor</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">&quot;pt&quot;</span><span class="p">)</span>  <span class="c1"># type: ignore[operator]</span>
-        <span class="k">return</span> <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pixel_values&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">current_pixel_values</span> <span class="o">=</span> <span class="n">load_current_pixel_values</span><span class="p">(</span><span class="n">current_df</span><span class="p">,</span> <span class="n">BUCKET_NAME</span><span class="p">)</span>
+    <span class="n">current_df</span><span class="p">[</span><span class="n">FEATURE_NAMES</span><span class="p">]</span> <span class="o">=</span> <span class="n">extract_features</span><span class="p">(</span><span class="n">current_pixel_values</span><span class="p">)</span>
 
-    <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">DOWNLOAD_WORKERS</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
-        <span class="n">pixel_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_load_one</span><span class="p">,</span> <span class="n">current_df</span><span class="p">[</span><span class="s2">&quot;image_path&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+    <span class="n">current_df</span> <span class="o">=</span> <span class="n">current_df</span><span class="p">[[</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;confidence&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">FEATURE_NAMES</span><span class="p">]]</span>
+    <span class="n">current_df</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_df</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;category&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">pixel_values</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="dogs_classification.data_drift.extract_features" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">dogs_classification.data_drift.extract_features</span>
-
-
-</h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">extract_features</span><span class="p">(</span><span class="n">pixel_values</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-</code></pre></div>
-
-    <div class="doc doc-contents first">
-
-        <p>Extract features (brightness, contrast, sharpness) from the pixel values of images.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>pixel_values</code>
-            </td>
-            <td>
-                  <code><span title="torch.Tensor">Tensor</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A tensor containing the pixel values of images.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="numpy.ndarray">ndarray</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>np.ndarray: A NumPy array containing the extracted features for each image.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/dogs_classification/data_drift.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">extract_features</span><span class="p">(</span><span class="n">pixel_values</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Extract features (brightness, contrast, sharpness) from the pixel values of images.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        pixel_values (torch.Tensor): A tensor containing the pixel values of images.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        np.ndarray: A NumPy array containing the extracted features for each image.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">pixel_values</span><span class="o">.</span><span class="n">numpy</span><span class="p">():</span>
-        <span class="n">brightness</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-        <span class="n">contrast</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
-
-        <span class="n">gx</span><span class="p">,</span> <span class="n">gy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-
-        <span class="n">sharpness</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">gy</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
-
-        <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">brightness</span><span class="p">,</span> <span class="n">contrast</span><span class="p">,</span> <span class="n">sharpness</span><span class="p">])</span>
-
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="dogs_classification.data_drift.compute_confidence" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">dogs_classification.data_drift.compute_confidence</span>
-
-
-</h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">compute_confidence</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">InferenceSession</span><span class="p">,</span> <span class="n">pixel_values</span><span class="p">:</span> <span class="n">ndarray</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-</code></pre></div>
-
-    <div class="doc doc-contents first">
-
-        <p>Compute the confidence scores for the predictions made by the model on the given pixel values.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
-            <td>
-                  <code><span title="onnxruntime.InferenceSession">InferenceSession</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The ONNX model used for making predictions.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>pixel_values</code>
-            </td>
-            <td>
-                  <code><span title="numpy.ndarray">ndarray</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A NumPy array containing the pixel values of images.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="numpy.ndarray">ndarray</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>np.ndarray: A NumPy array containing the confidence scores for each image.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/dogs_classification/data_drift.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compute_confidence</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">InferenceSession</span><span class="p">,</span> <span class="n">pixel_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compute the confidence scores for the predictions made by the model on the given pixel values.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model (InferenceSession): The ONNX model used for making predictions.</span>
-<span class="sd">        pixel_values (np.ndarray): A NumPy array containing the pixel values of images.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        np.ndarray: A NumPy array containing the confidence scores for each image.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">confidences</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pixel_values</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>  <span class="c1"># (1, C, H, W)</span>
-
-        <span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;pixel_values&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">})[</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="n">exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">logits</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-        <span class="n">probs</span> <span class="o">=</span> <span class="n">exp</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">confidences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">probs</span><span class="p">)))</span>
-
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">confidences</span><span class="p">)</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">Report</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">DataDriftPreset</span><span class="p">(),</span> <span class="n">DataSummaryPreset</span><span class="p">()])</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">reference_data</span><span class="o">=</span><span class="n">reference_report_df</span><span class="p">,</span> <span class="n">current_data</span><span class="o">=</span><span class="n">current_df</span><span class="p">)</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">save_html</span><span class="p">(</span><span class="n">REPORT_LOCAL_PATH</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">REPORT_LOCAL_PATH</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
