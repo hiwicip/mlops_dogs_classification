@@ -148,7 +148,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
-We did use an open-source package that was not covered in the course: Hugging Face ⁠ transformers ⁠. In particular, we used the pretrained ViT model ⁠ google/vit-base-patch16-224 ⁠ together with ⁠ AutoImageProcessor ⁠ and ⁠ ViTForImageClassification ⁠ to build the image classification pipeline. This helped us reuse a properly pre-trained image classifier instead of training a model from scratch.
+We did use an open-source package that was not covered in the course: Hugging Face transformers. In particular, we used the pretrained ViT model google/vit-base-patch16-224 together with AutoImageProcessor and ViTForImageClassification to build the image classification pipeline. This helped us reuse a properly pre-trained image classifier instead of training a model from scratch.
 
 ## Coding environment
 
@@ -274,7 +274,7 @@ For every To-Do, we created an issue in GitHub and assigned it to a group member
 >
 > Answer:
 
-We did make use of DVC in the following way: after preprocessing converts the raw Stanford Dogs images into per-image .pt tensors plus a metadata.csv and classes.json, we tracked the processed data directory with DVC and pushed it to a Google Cloud Storage remote using the dvc-gs backend, so that only the small .dvc pointer files are committed to Git while the data itself stays in the bucket. In the end it helped us in tying each commit to the exact dataset it was produced with, letting any team member (as well as our CI and cloud training jobs) run dvc pull to fetch a fixed version instead of re-running the slow Kaggle download and preprocessing, for controlling the data-versioning and reproducibility part of our pipeline.
+After preprocessing converts the raw Stanford Dogs images into per-image .pt tensors plus a metadata.csv and classes.json, we tracked the processed data directory with DVC and pushed it to a Google Cloud Storage remote using the dvc-gs backend, so only the small .dvc pointer files are committed to Git while the data itself stays in the bucket. This ties each commit to the exact dataset it was produced with and lets any team member, as well as our CI and cloud training jobs, run `dvc pull` to fetch a fixed version instead of re-running the slow Kaggle download and preprocessing.
 
 ### Question 11
 
@@ -329,8 +329,8 @@ Moreover, we implemented two continuous Machine Learning workflows. The first ru
 >
 > Answer:
 
-We made use of config files. Whenever an experiment is run the following happens: Hydra loads all the hyperparameters (learning rate, batch size, epochs, model name, profiling flag) from configs/config.yaml, and the resolved config is written into a timestamped outputs/ directory, so we always know which settings produced a run. The key parameters are also logged to Weights & Biases, and the resulting checkpoint is uploaded to our GCS bucket and registered as a W&B artifact linked to that run. On top of this, our data split uses a fixed seed (SEED = 42) and the processed data is DVC-versioned, so the dataset is fixed too, and dependencies are pinned via uv.lock.
-To reproduce an experiment one would have to pull the data with dvc pull, check out the matching commit, read the hyperparameters back from the corresponding W&B run, and re-run training with that config. This chains data, code, config, and environment into one reproducible pipeline.
+Hydra loads all the hyperparameters (learning rate, batch size, epochs, model name, profiling flag) from configs/config.yaml whenever an experiment is run, and the resolved config gets written into a timestamped outputs/ directory, so we always know which settings produced a run. The key parameters are also logged to Weights & Biases, and the resulting checkpoint is uploaded to our GCS bucket and registered as a W&B artifact linked to that run. On top of this, our data split uses a fixed seed (SEED = 42) and the processed data is DVC-versioned, so the dataset is fixed too, and dependencies are pinned via uv.lock.
+Reproducing an experiment then just means pulling the data with dvc pull, checking out the matching commit, reading the hyperparameters back from the corresponding W&B run, and re-running training with that config — chaining data, code, config, and environment into one reproducible pipeline.
 
 ### Question 14
 
@@ -501,7 +501,7 @@ We did manage to write an API for our model. We used BentoML API and deployed it
 >
 > Answer:
 
-We deployed our API in two stages. Locally, we first started the BentoML service in the terminal, spinning up a server reachable at localhost, so we could test the `/predict` endpoint before shipping anything to the cloud. For the cloud deployment, we defined `cloudbuild_bentoml.yaml` and `cloudbuild_frontend.yaml`, which build the respective Docker image, push it to Artifact Registry, and deploy it to Cloud Run. This is wired up as a Cloud Build trigger, so a new version is deployed automatically whenever the relevant files change on the master branch, rather than us running `gcloud run deploy` by hand. The backend is reachable at `https://dogs-bentoml-288634047169.europe-west4.run.app/` and the frontend at `https://dogs-frontend-288634047169.europe-west4.run.app/`. To invoke the deployed service directly, one can POST an image to the backend's `/predict` endpoint, which returns the top-5 predicted breeds with their confidence scores.
+We first ran the BentoML service locally in the terminal, testing the `/predict` endpoint on localhost before touching the cloud. `cloudbuild_bentoml.yaml` and `cloudbuild_frontend.yaml` build the respective Docker image, push it to Artifact Registry and deploy it to Cloud Run through a Cloud Build trigger, so pushing changes to the relevant files on the master branch redeploys the service automatically. The backend is reachable at `https://dogs-bentoml-288634047169.europe-west4.run.app/` and the frontend at `https://dogs-frontend-288634047169.europe-west4.run.app/`. To invoke the deployed service directly, one can POST an image to the backend's `/predict` endpoint, which returns the top-5 predicted breeds with their confidence scores.
 
 ### Question 25
 
@@ -531,10 +531,8 @@ We deployed our API in two stages. Locally, we first started the BentoML service
 > *measure ... and ... that would inform us about this ... behaviour of our application.*
 >
 > Answer:
-We set up monitoring on two levels, data drifting and system monitoring.
-*Data drift*: Every prediction the deployed model serves saves its input image, predicted class, and class probability to a GCS bucket. Our data_drift.py then builds a reference set from the training data and compares it against recent live predictions, looking at image features like brightness, contrast, and sharpness as well as prediction probabilities. Based on these info an HTML drift report is produced that gets uploaded to the bucket. We also added a FastAPI /report endpoint (`https://dogs-drift-monitoring-jfoaj7nkfa-ez.a.run.app/report`) that generates one on demand.
-*System monitoring*: Our BentoML service exposes a Prometheus /metrics endpoint that Google Managed Prometheus scrapes from the Cloud Run service, so we can track request latency, throughput, and errors. Alongside these custom metrics, we pull in the ones Google Cloud exposes for the service itself and show everything in a dedicated dashboard. We also set up Google Cloud's alerting on top, so a threshold breach, such as a latency spike, sends an alert instead of us having to monitor the dashboard. 
-Between the two levels, we can spot both gradual drift in the input and prediction distributions and operational problems with the service itself.
+Every prediction the deployed model serves saves its input image, predicted class, and class probability to a GCS bucket. `data_drift.py` builds a reference set from the training data and compares it against these recent live predictions, looking at image features like brightness, contrast, and sharpness as well as prediction probabilities, then produces an HTML drift report that gets uploaded to the bucket. We also added a FastAPI /report endpoint (`https://dogs-drift-monitoring-jfoaj7nkfa-ez.a.run.app/report`) that generates one on demand, so we can catch gradual drift in the input and prediction distributions.
+On the system side, our BentoML service exposes a Prometheus /metrics endpoint that Google Managed Prometheus scrapes from the Cloud Run service, so we can track request latency, throughput, and errors alongside the metrics Google Cloud exposes for the service itself, all shown in a dedicated dashboard. Google Cloud alerting sits on top of that, so a threshold breach, such as a latency spike, sends an alert instead of us having to watch the dashboard ourselves.
 
 ## Overall discussion of project
 
