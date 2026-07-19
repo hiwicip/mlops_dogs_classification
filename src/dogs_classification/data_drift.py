@@ -1,3 +1,4 @@
+import hashlib
 import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -29,6 +30,7 @@ ONNX_MODEL_GCS_PATH = Path("models/dog_classifier.onnx")
 PROCESSED_DVC_FILE = Path("data/processed.dvc")
 PROCESSED_DIR = Path("data/processed")
 DOWNLOAD_WORKERS = 8
+REFERENCE_REPORT_CACHE_PREFIX = "drift_reference/"
 
 SAMPLES_PER_CLASS = 5
 FEATURE_NAMES = ["brightness", "contrast", "sharpness"]
@@ -255,8 +257,13 @@ def build_reference_df() -> pd.DataFrame:
     return reference_df
 
 
-def load_or_build_reference_report_df() -> pd.DataFrame:
-    """Compute the reference-side report columns once (deterministic sample => same result every time)."""
+def build_reference_report_df() -> pd.DataFrame:
+    """Compute the reference-side report columns (features + confidence) from scratch.
+
+    This is the CPU-heavy part (image loading + ONNX inference over the whole reference
+    sample), so callers should go through load_or_build_reference_report_df() to avoid
+    redoing it on every cold start.
+    """
     load_model_and_processor()
 
     with open(CLASSES_FILE) as f:
@@ -272,6 +279,34 @@ def load_or_build_reference_report_df() -> pd.DataFrame:
     reference_df = reference_df[["label", "confidence", *FEATURE_NAMES]]
     reference_df["label"] = reference_df["label"].astype("category")
     return reference_df
+
+
+def _reference_report_cache_blob_name() -> str:
+    """Content-hash-based cache key so the cache self-invalidates when the reference data changes."""
+    digest = hashlib.md5(METADATA_PATH.read_bytes()).hexdigest()
+    return f"{REFERENCE_REPORT_CACHE_PREFIX}reference_report_{digest}.parquet"
+
+
+def load_or_build_reference_report_df() -> pd.DataFrame:
+    """Load the cached reference report from GCS, computing and caching it if missing."""
+    client = storage.Client()
+    bucket = client.bucket(BUCKET_NAME)
+    blob = bucket.blob(_reference_report_cache_blob_name())
+
+    if blob.exists(client):
+        print(f"Loading cached reference report from gs://{BUCKET_NAME}/{blob.name}")
+        return pd.read_parquet(BytesIO(blob.download_as_bytes()))
+
+    print("No cached reference report found, computing it now")
+    reference_report_df = build_reference_report_df()
+
+    buffer = BytesIO()
+    reference_report_df.to_parquet(buffer, index=False)
+    buffer.seek(0)
+    blob.upload_from_file(buffer, content_type="application/octet-stream")
+    print(f"Cached reference report to gs://{BUCKET_NAME}/{blob.name}")
+
+    return reference_report_df
 
 
 def run_analysis(reference_report_df: pd.DataFrame, current_df: pd.DataFrame) -> str:
