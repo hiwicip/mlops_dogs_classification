@@ -52,7 +52,7 @@ serve = [
     "google-cloud-storage>=2.0.0",
 ]
 frontend = [
-    "streamlit>=1.59.0",
+    "streamlit>=1.60.0",
     "google-cloud-run>=0.16.1",
     "pandas>=3.0.3",
     "requests>=2.32.0",
