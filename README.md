@@ -7,6 +7,9 @@ Classifier of dog breeds.
 You can access the application here:
 [Go to the App](https://dogs-frontend-288634047169.europe-west4.run.app/)
 
+**NOTE: The website was shut down in October 2026 after the MLOps course concluded.**
+
+
 Project documentation is available here:
 [View the Documentation](https://hiwicip.github.io/mlops_dogs_classification/)
 
